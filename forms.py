@@ -52,6 +52,19 @@ class RegisterForm(FlaskForm):
 
     submit = SubmitField("Register") # to submit the enter data
 
+""""--------------TO LOGIN -------------"""
+class LoginForm(FlaskForm):
+    email = StringField (
+        "Email",
+        validators=[DataRequired(), Email()]
+    ) # it use gmail to able to login
+
+    password = PasswordField (
+        "Password",
+        validators=[DataRequired(), Length(min=6)]
+    ) #
+    submit = SubmitField("Login")
+
 class AddTerminal(FlaskForm):
     terminal_name = StringField (
         "terminal name",
