@@ -137,5 +137,24 @@ def index():
 def commuter():
     return render_template("commuter.html")
 
+@app.route("/addterminal", methods=['GET', 'POST'])
+def Add():
+    form = AddTerminal()
+
+    if form.validate_on_submit():
+        terminal_name = form.terminal_name.data
+        location = form.location.data
+
+        terminal = Terminal(
+            terminal_name=terminal_name,
+            location=location
+        )
+
+        db.session.add(terminal)
+        db.session.commit()
+        flash("data added in database")
+        return redirect(url_for("operator"))
+    return render_template("terminal.html", form=form)
+
 if __name__ == "__main__":
   app.run(debug=True)
