@@ -1,0 +1,36 @@
+
+{% extends "base.html" %}
+{% block title %} LOGIN {% endblock %}
+{% block content %}
+
+<form method="post">
+    {{ form.hidden_tag() }}
+
+    {{ form.email.label }}
+    {{ form.email() }}
+
+    <br>
+
+    {{ form.password.label }}
+    {{ form.password() }}
+
+    <br>
+
+   {{ form.submit() }}
+
+</form>
+
+
+{% endblock %}
+<!--
+
+get - getting the information to the wedsite
+post - to make it securely / send
+
+fomr - a way to send a infomation to the wedsite
+- action to take
+
+<form actions="" method="post">
+</form>
+
+-->
