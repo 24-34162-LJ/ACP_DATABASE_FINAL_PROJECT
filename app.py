@@ -122,5 +122,16 @@ def sign():
 
     return render_template("sign.html", form=form)
 
+@app.route('/logout')
+def logout():
+    session.clear()
+    flash("You have been logged out.", "info")
+    return redirect(url_for('index'))
+
+
+@app.route("/")
+def index():
+    return redirect(url_for("home"))
+
 if __name__ == "__main__":
   app.run(debug=True)
