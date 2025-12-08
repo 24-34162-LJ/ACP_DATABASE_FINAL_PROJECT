@@ -88,5 +88,39 @@ def login():
 
     return render_template("login.html", form=form)
 
+@app.route('/sign', methods=['GET', 'POST'])
+def sign():
+    form = RegisterForm()
+
+    if form.validate_on_submit():
+        first_name = form.first_name.data
+        last_name = form.last_name.data
+        role = form.role.data
+        email = form.email.data
+        password = form.password.data
+
+        existing_email = User.query.filter_by(email=email).first()
+        if existing_email:
+            flash("Email already registered. Try another.", "danger")
+            return redirect(url_for("sign"))
+
+        hashed_pw = generate_password_hash(password)
+
+        user = User(
+            first_name=first_name,
+            last_name=last_name,
+            email=email,
+            password_hash=hashed_pw,
+            role=role,
+        )
+
+        db.session.add(user)
+        db.session.commit()
+
+        flash("Registration successful! You may now log in.", "success")
+        return redirect(url_for("login"))
+
+    return render_template("sign.html", form=form)
+
 if __name__ == "__main__":
   app.run(debug=True)
