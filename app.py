@@ -128,10 +128,14 @@ def logout():
     flash("You have been logged out.", "info")
     return redirect(url_for('index'))
 
-
 @app.route("/")
 def index():
     return redirect(url_for("home"))
+
+# ---------------- ROLE PAGES ----------------
+@app.route("/commuter")
+def commuter():
+    return render_template("commuter.html")
 
 if __name__ == "__main__":
   app.run(debug=True)
