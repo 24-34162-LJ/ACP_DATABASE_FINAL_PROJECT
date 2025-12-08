@@ -47,7 +47,46 @@ def view():
        "notifications": Notification.query.all(),
        "auditlogs": Auditlog.query.all(),
    }
-    return render_template("view_database.html", data=data) 
+    return render_template("view_database.html", data=data)
+
+# ---------------- AUTH ----------------
+@app.route('/login', methods=['POST', 'GET'])
+def login():
+    form = LoginForm()
+
+    if request.method == 'POST':
+        print("FORM DATA:", form.data)
+        print("FORM ERRORS:", form.errors)
+
+    if form.validate_on_submit():
+        email = form.email.data
+        password = form.password.data
+
+        user = User.query.filter_by(email=email).first()
+
+        if user and check_password_hash(user.password_hash, password):
+
+            session['user_id'] = user.user_id
+            session['first_name'] = user.first_name
+            session['last_name'] = user.last_name
+            session['role'] = user.role
+
+            flash('Login successful!', 'success')
+
+            # Redirect based on role
+            if session['role'] == 'player':
+                return redirect(url_for("commuter"))
+            elif session['role'] == 'operator':
+                return redirect(url_for("operator"))
+            elif session['role'] == 'viewer':
+                return redirect(url_for("commuter"))
+            else:
+                return redirect(url_for("admin"))
+
+        else:
+            flash("Invalid email or password.", "danger")
+
+    return render_template("login.html", form=form)
 
 if __name__ == "__main__":
   app.run(debug=True)
