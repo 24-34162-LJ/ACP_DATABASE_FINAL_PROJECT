@@ -52,3 +52,19 @@ class RegisterForm(FlaskForm):
 
     submit = SubmitField("Register") # to submit the enter data
 
+class AddTerminal(FlaskForm):
+    terminal_name = StringField (
+        "terminal name",
+        validators=[DataRequired()]
+    )
+    location = StringField (
+        "terminal location",
+        validators=[DataRequired()]
+    )
+    status = SelectField(
+        "Select status",
+        choices=[("active","active"),("inactive","inactive")],
+        default='active',
+        validators=[DataRequired()]
+    )
+    submit = SubmitField("add terminal")
