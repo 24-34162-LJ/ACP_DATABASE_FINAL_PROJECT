@@ -16,4 +16,39 @@ class nameof the form(FlaskForm) - always use the FlaskForm is very important
       )
       submit = SubmitField("Register") = always part of the form
 """
+""""--------------SIGN IN -------------"""
+class RegisterForm(FlaskForm):
+    first_name = StringField (
+        "First Name",
+        validators=[DataRequired(), Length(min=3, max=25)]
+    ) # for first_name
+
+    last_name = StringField (
+        "Last Name",
+        validators=[DataRequired(), Length(min=3, max=25)]
+    ) # for last name
+
+    role = SelectField (
+        "Select Role",
+        choices=[("player", "player"), ("operator", "operator")],
+        default='player',
+        validators=[DataRequired()]
+    ) # to know the role of the user
+
+    email = StringField(
+        "Email",
+        validators=[DataRequired(), Email()]
+    )# to get the email # this will be use to login
+
+    password = PasswordField (
+        "Password",
+        validators=[DataRequired(), Length(min=6)]
+    )# to get the password
+
+    confirm_password = PasswordField (
+        "Confirm Password",
+        validators=[DataRequired(), EqualTo('password')]
+    )# to make sure the password is same
+
+    submit = SubmitField("Register") # to submit the enter data
 
