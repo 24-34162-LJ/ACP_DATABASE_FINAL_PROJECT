@@ -137,6 +137,25 @@ def index():
 def commuter():
     return render_template("commuter.html")
 
+@app.route("/operator")
+def operator():
+    main_id = current_app.config["MAIN_TERMINAL_ID"]
+    terminals = Terminal.query.all()
+    return render_template(
+        "operator.html",
+        terminals=terminals,
+        main_terminal_id=main_id
+        )
+
+@app.route("/operator/seat/<int:terminal_id>")
+def operator_seat(terminal_id):
+    terminal = Terminal.query.get_or_404(terminal_id)
+    return render_template(
+        "operator_seat.html",
+        terminal_id=terminal_id,
+        terminal_name=terminal.terminal_name
+    )
+
 @app.route("/addterminal", methods=['GET', 'POST'])
 def Add():
     form = AddTerminal()
@@ -155,16 +174,6 @@ def Add():
         flash("data added in database")
         return redirect(url_for("operator"))
     return render_template("terminal.html", form=form)
-
-@app.route("/operator")
-def operator():
-    main_id = current_app.config["MAIN_TERMINAL_ID"]
-    terminals = Terminal.query.all()
-    return render_template(
-        "operator.html",
-        terminals=terminals,
-        main_terminal_id=main_id
-        )
 
 if __name__ == "__main__":
   app.run(debug=True)
