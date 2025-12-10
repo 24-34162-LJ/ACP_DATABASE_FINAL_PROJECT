@@ -175,6 +175,20 @@ def Add():
         return redirect(url_for("operator"))
     return render_template("terminal.html", form=form)
 
+@app.route("/map")
+def map_view():
+    main_id = current_app.config.get("MAIN_TERMINAL_ID", MAIN_TERMINAL_ID)
+
+    terminals = (
+        Terminal.query
+        .filter(Terminal.terminal_id != main_id)
+        .order_by(Terminal.terminal_id.asc())
+        .limit(4)
+        .all()
+    )
+
+    return render_template("map.html", terminals=terminals, main_terminal_id=main_id)
+
 # ---------------- API: QUEUE DATA FOR A TERMINAL ----------------
 @app.route("/api/terminal/<int:terminal_id>/queue")
 def api_terminal_queue(terminal_id):
