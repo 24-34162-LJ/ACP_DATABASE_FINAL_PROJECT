@@ -145,7 +145,7 @@ def operator():
         "operator.html",
         terminals=terminals,
         main_terminal_id=main_id
-        )
+        ) 
 
 @app.route("/operator/seat/<int:terminal_id>")
 def operator_seat(terminal_id):
@@ -174,6 +174,91 @@ def Add():
         flash("data added in database")
         return redirect(url_for("operator"))
     return render_template("terminal.html", form=form)
+
+# ---------------- API: QUEUE DATA FOR A TERMINAL ----------------
+@app.route("/api/terminal/<int:terminal_id>/queue")
+def api_terminal_queue(terminal_id):
+    """
+    Returns jeepneys currently in this terminal's queue (Waiting/Boarding).
+    If may multiple rows for the same jeepney_id, we keep only
+    the latest (pinaka-bagong arrival_time).
+    """
+    rows = (
+        TerminalJeepneys.query
+        .filter_by(terminal_id=terminal_id)
+        .filter(TerminalJeepneys.status.in_(["Waiting", "Boarding"]))
+        .order_by(TerminalJeepneys.arrival_time.asc())
+        .all()
+    )
+
+    # keep only latest per jeepney_id
+    latest_by_jeep = {}
+    for r in rows:
+        j_id = r.jeepney_id
+        if j_id not in latest_by_jeep:
+            latest_by_jeep[j_id] = r
+        else:
+            # choose the row with the newest arrival_time
+            if r.arrival_time and latest_by_jeep[j_id].arrival_time:
+                if r.arrival_time > latest_by_jeep[j_id].arrival_time:
+                    latest_by_jeep[j_id] = r
+            else:
+                # kung may null sa arrival_time, keep the one that is not null
+                latest_by_jeep[j_id] = r
+
+    data = []
+    for r in latest_by_jeep.values():
+        jeep = r.jeep_jeep_fk  # relationship to Jeepney
+        data.append({
+            "jeepney_id": jeep.jeepney_id,
+            "plate_number": jeep.plate_number,
+            "capacity": jeep.capacity,
+            "passengers": r.current_passengers or 0,
+        })
+
+    return jsonify(data)
+
+# ---------------- API: ADD JEEP TO TERMINAL ----------------
+@app.route("/api/terminal/<int:terminal_id>/jeepneys", methods=["POST"])
+def api_add_jeep_to_terminal(terminal_id):
+    """
+    Operator adds a new jeepney to the system AND assigns it
+    to the given terminal's queue as 'Waiting'.
+    """
+    data = request.get_json()
+
+    plate_number = data.get("plate_number")
+    capacity = data.get("capacity", 22)
+
+    if not plate_number:
+        return jsonify({"error": "plate_number is required"}), 400
+
+    # 1) Create new Jeepney record
+    jeep = Jeepney(
+        plate_number=plate_number,
+        capacity=capacity,
+        status="Available"
+    )
+    db.session.add(jeep)
+    db.session.flush()  # so jeep.jeepney_id is available
+
+    # 2) Attach it to this terminal as 'Waiting'
+    tj = TerminalJeepneys(
+        terminal_id=terminal_id,
+        jeepney_id=jeep.jeepney_id,
+        arrival_time=datetime.utcnow(),
+        status="Waiting"
+    )
+    db.session.add(tj)
+
+    db.session.commit()
+
+    return jsonify({
+        "jeepney_id": jeep.jeepney_id,
+        "plate_number": jeep.plate_number,
+        "capacity": jeep.capacity,
+        "terminal_id": terminal_id
+    }), 201
 
 if __name__ == "__main__":
   app.run(debug=True)
