@@ -189,6 +189,16 @@ def map_view():
 
     return render_template("map.html", terminals=terminals, main_terminal_id=main_id)
 
+@app.route("/mainterminal")
+def mainterminal():
+    main_id = current_app.config["MAIN_TERMINAL_ID"]
+    terminals = Terminal.query.all()
+    return render_template(
+        "mainterminal.html",
+        terminals=terminals,
+        main_terminal_id=main_id
+    )
+
 # ---------------- API: QUEUE DATA FOR A TERMINAL ----------------
 @app.route("/api/terminal/<int:terminal_id>/queue")
 def api_terminal_queue(terminal_id):
