@@ -156,5 +156,15 @@ def Add():
         return redirect(url_for("operator"))
     return render_template("terminal.html", form=form)
 
+@app.route("/operator")
+def operator():
+    main_id = current_app.config["MAIN_TERMINAL_ID"]
+    terminals = Terminal.query.all()
+    return render_template(
+        "operator.html",
+        terminals=terminals,
+        main_terminal_id=main_id
+        )
+
 if __name__ == "__main__":
   app.run(debug=True)
