@@ -703,73 +703,60 @@ def api_main_origin_jeeps():
 
     return jsonify(result[:4])
 
-# ---------------- API: MAIN ORIGIN JEEPS (FOR MAINTERMINAL UI) ----------------
-@app.route("/api/main/origin-jeeps")
-def api_main_origin_jeeps():
-    """
-    Returns the latest 'Departed' jeep from each ORIGIN terminal
-    that is currently en route to MAIN TERMINAL.
-    """
-
+# ---------------- API: LIVE TRIPS FOR MAP ANIMATION ----------------
+@app.route("/api/map/live-trips")
+def api_map_live_trips():
     main_id = current_app.config.get("MAIN_TERMINAL_ID", MAIN_TERMINAL_ID)
 
-    # Subquery → find latest departure per terminal    
-    subq = (
-        db.session.query(
-            TerminalJeepneys.terminal_id,
-            func.max(TerminalJeepneys.departure_time).label("max_dep")
-        )
-        .filter(
-            TerminalJeepneys.status == "Departed",
-            TerminalJeepneys.terminal_id != main_id      # ← exclude MAIN
-        )
-        .group_by(TerminalJeepneys.terminal_id)
-        .subquery()
-    )
-    
     rows = (
-        db.session.query(TerminalJeepneys, Jeepney, Terminal)
-        .join(
-            subq,
-            (TerminalJeepneys.terminal_id == subq.c.terminal_id) &
-            (TerminalJeepneys.departure_time == subq.c.max_dep)
+        db.session.query(
+            Trip.trip_id,
+            Trip.jeepney_id,
+            Trip.origin_terminal_id,
+            Trip.destination_terminal_id,
+            Trip.status,
+            Jeepney.capacity,
+            Seat.occupied_seats.label("passengers")
         )
-        .join(Jeepney, TerminalJeepneys.jeepney_id == Jeepney.jeepney_id)
-        .join(Terminal, TerminalJeepneys.terminal_id == Terminal.terminal_id)
-        .filter(Terminal.terminal_id != main_id)  # extra guard
-        .order_by(TerminalJeepneys.terminal_id.asc())
+        .join(Jeepney, Trip.jeepney_id == Jeepney.jeepney_id)
+        .outerjoin(Seat, Seat.trip_id == Trip.trip_id)
+        .filter(Trip.status == "En Route")
+        .filter(
+            (Trip.origin_terminal_id == main_id) |
+            (Trip.destination_terminal_id == main_id)
+        )
         .all()
     )
 
     result = []
-
-    for tj, jeep, term in rows:
-
-        # Skip jeeps NOT going to MAIN TERMINAL
-        trip = (
-            Trip.query
-            .filter_by(
-                jeepney_id=jeep.jeepney_id,
-                status="En Route",
-                destination_terminal_id=main_id
-            )
-            .order_by(Trip.departure_time.desc())
-            .first()
-        )
-
-        if not trip:
-            continue  # jeep is not currently heading to MAIN
-
+    for row in rows:
         result.append({
-            "jeepney_id": jeep.jeepney_id,
-            "plate_number": jeep.plate_number,
-            "terminal_id": term.terminal_id,
-            "terminal_name": term.terminal_name,
-            "capacity": jeep.capacity,
-            "passengers": tj.current_passengers or 0
+            "trip_id": row.trip_id,
+            "jeepney_id": row.jeepney_id,
+            "origin_terminal_id": row.origin_terminal_id,
+            "destination_terminal_id": row.destination_terminal_id,
+            "status": row.status,
+            "capacity": row.capacity,
+            "passengers": row.passengers or 0,
         })
 
-    return jsonify(result[:4])
+    # quick debug if you want:
+    # print("LIVE TRIPS:", result)
+
+    return jsonify(result)
+
+@app.route("/api/map/completed-trips")
+def api_map_completed_trips():
+    trips = Trip.query.filter(Trip.status.in_(["Arrived", "Completed"])).all()
+    return jsonify([
+        {
+            "trip_id": t.trip_id,
+            "jeepney_id": t.jeepney_id,
+            "origin_terminal_id": t.origin_terminal_id,
+            "destination_terminal_id": t.destination_terminal_id
+        }
+        for t in trips
+    ])
 
 if __name__ == "__main__":
   app.run(debug=True)
