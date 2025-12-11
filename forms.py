@@ -209,3 +209,53 @@ class JeepneyForm(FlaskForm):
     )
     submit = SubmitField("Save Jeepney")
 
+
+# ---------- TRIP ----------
+class TripForm(FlaskForm):
+    jeepney_id = SelectField(
+        "Jeepney",
+        coerce=int,
+        validators=[DataRequired()]
+    )
+    route_id = SelectField(
+        "Route",
+        coerce=int,
+        validators=[DataRequired()]
+    )
+    origin_terminal_id = SelectField(
+        "Origin Terminal",
+        coerce=int,
+        validators=[DataRequired()]
+    )
+    destination_terminal_id = SelectField(
+        "Destination Terminal",
+        coerce=int,
+        validators=[DataRequired()]
+    )
+
+    departure_time = DateTimeLocalField(
+        "Departure Time",
+        format="%Y-%m-%dT%H:%M",
+        validators=[DataRequired()],
+    )
+    arrival_time = DateTimeLocalField(
+        "Arrival Time",
+        format="%Y-%m-%dT%H:%M",
+        validators=[Optional()],
+    )
+
+    status = SelectField(
+        "Status",
+        choices=[
+            ("Scheduled", "Scheduled"),
+            ("Waiting", "Waiting"),
+            ("En Route", "En Route"),
+            ("Arrived", "Arrived"),
+            ("Completed", "Completed"),
+            ("Cancelled", "Cancelled"),
+        ],
+        validators=[DataRequired()],
+    )
+
+    submit = SubmitField("Save Trip")
+
