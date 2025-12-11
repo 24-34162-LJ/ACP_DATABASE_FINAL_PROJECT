@@ -107,7 +107,7 @@ def set_form_choices(form, model):
         form.terminal_id.choices = [
             (t.terminal_id, t.terminal_name) for t in Terminal.query.all()
     ]
-    
+
 # ---------------- BASIC PAGES ----------------
 @app.route('/home')
 def home():
@@ -254,6 +254,43 @@ def Add():
         flash("data added in database")
         return redirect(url_for("operator"))
     return render_template("terminal.html", form=form)
+
+@app.route("/add/<model>", methods=["GET", "POST"])
+def add_record(model):
+    model = model.lower()
+    ModelClass = MODEL_MAP[model]
+    FormClass = FORM_MAP[model]
+
+    form = FormClass()
+
+    # important: set choices BEFORE validate_on_submit
+    set_form_choices(form, model)
+
+    if form.validate_on_submit():
+        # special case for users because of password hashing
+        if model == "jeepneys":
+            item = Jeepney(
+                plate_number=form.plate_number.data,
+                capacity=form.capacity.data,
+                status="Available"
+            )
+            db.session.add(item)
+            db.session.flush()  # get jeepney_id
+
+            # also attach to selected terminal
+            tj = TerminalJeepneys(
+                terminal_id=form.terminal_id.data,
+                jeepney_id=item.jeepney_id,
+                arrival_time=datetime.utcnow(),
+                status="Waiting",
+                current_passengers=0
+            )
+            db.session.add(tj)
+
+            db.session.commit()
+            return redirect(url_for("view"))
+
+    return render_template("add.html", form=form, model=model, action="add")
 
 @app.route("/map")
 def map_view():
