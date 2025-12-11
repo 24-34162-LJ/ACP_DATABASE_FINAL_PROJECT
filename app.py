@@ -818,5 +818,103 @@ def api_trip_depart():
 
     return jsonify({"trip_id": trip.trip_id}), 201
 
+@app.route("/api/trips/arrive", methods=["POST"])
+def api_trip_arrive():
+    """
+    Called by the map when a jeep finishes travelling.
+    - Marks last 'Departed' TerminalJeepneys row as 'Arrived'
+    - Marks last 'En Route' Trip as 'Arrived'
+    - Creates a NEW TerminalJeepneys row at destination with status 'Waiting'
+    """
+    data = request.get_json() or {}
+
+    jeepney_id = data.get("jeepney_id")
+    origin_id = data.get("origin_terminal_id")
+    destination_id = data.get("destination_terminal_id")
+
+    if not (jeepney_id and origin_id and destination_id):
+        return jsonify({"error": "Missing fields"}), 400
+
+    # last departed row (either from origin or from MAIN)
+    tj = (
+        TerminalJeepneys.query
+        .filter_by(jeepney_id=jeepney_id, status="Departed")
+        .order_by(TerminalJeepneys.departure_time.desc())
+        .first()
+    )
+    if not tj:
+        return jsonify({"error": "No departed record found"}), 404
+
+    tj.status = "Arrived"
+    tj.arrival_time = datetime.utcnow()
+    arrived_passengers = tj.current_passengers or 0
+
+    trip = (
+        Trip.query
+        .filter_by(jeepney_id=jeepney_id, status="En Route")
+        .order_by(Trip.departure_time.desc())
+        .first()
+    )
+    if trip:
+        trip.status = "Arrived"
+        trip.arrival_time = datetime.utcnow()
+
+    new_record = TerminalJeepneys(
+        terminal_id=destination_id,
+        jeepney_id=jeepney_id,
+        arrival_time=datetime.utcnow(),
+        departure_time=None,
+        status="Waiting",
+        current_passengers=arrived_passengers
+    )
+
+    db.session.add(new_record)
+    db.session.commit()
+
+    return jsonify({
+        "message": "Jeepney arrival recorded",
+        "jeepney_id": jeepney_id,
+        "from": origin_id,
+        "to": destination_id,
+        "arrived_passengers": arrived_passengers
+    }), 200
+
+# ---------------- MAIN ----------------
 if __name__ == "__main__":
-  app.run(debug=True)
+    with app.app_context():
+        db.create_all()
+        
+               # Sample users
+        if not User.query.filter_by(email='admin@gmail.com').first():
+            admin = User(
+                first_name='Admin',
+                last_name='User',
+                email='admin@gmail.com',
+                password_hash=generate_password_hash('admin123'),
+                role='admin'
+            )
+            viewer = User(
+                first_name='Viewer',
+                last_name='User',
+                email='viewer@gmail.com',
+                password_hash=generate_password_hash('viewer123'),
+                role='viewer'
+            )
+            db.session.add_all([admin, viewer])
+            db.session.commit()
+            
+        # check if a main terminal exists
+        main = Terminal.query.filter_by(is_main=True).first()
+
+        if not main:
+            main = Terminal(
+                terminal_name="Main Terminal",
+                location="Main Hub, Batangas",
+                is_main=True
+            )
+            db.session.add(main)
+            db.session.commit()
+        # SAVE the dynamic main terminal ID to config
+        app.config["MAIN_TERMINAL_ID"] = main.terminal_id
+
+    app.run(debug=True)
