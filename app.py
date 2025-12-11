@@ -55,6 +55,59 @@ FORM_MAP = {
     "auditlogs": AuditlogForm,
 }
 
+def set_form_choices(form, model):
+    """Fill SelectField choices depending on the model name."""
+    if model == "routes":
+        terminals = Terminal.query.all()
+        term_choices = [(t.terminal_id, t.terminal_name) for t in terminals]
+        form.start_terminal_id.choices = term_choices
+        form.end_terminal_id.choices = term_choices
+
+    elif model == "trips":
+        jeepneys = Jeepney.query.all()
+        routes = Route.query.all()
+        terminals = Terminal.query.all()
+
+        form.jeepney_id.choices = [(j.jeepney_id, j.plate_number) for j in jeepneys]
+        form.route_id.choices = [(r.route_id, r.route_name) for r in routes]
+        term_choices = [(t.terminal_id, t.terminal_name) for t in terminals]
+        form.origin_terminal_id.choices = term_choices
+        form.destination_terminal_id.choices = term_choices
+
+    elif model == "seats":
+        trips = Trip.query.all()
+        form.trip_id.choices = [(t.trip_id, f"Trip {t.trip_id}") for t in trips]
+
+    elif model == "terminaljeeps":
+        terminals = Terminal.query.all()
+        jeepneys = Jeepney.query.all()
+        form.terminal_id.choices = [(t.terminal_id, t.terminal_name) for t in terminals]
+        form.jeepney_id.choices = [(j.jeepney_id, j.plate_number) for j in jeepneys]
+
+    elif model == "userfavorites":
+        users = User.query.all()
+        terminals = Terminal.query.all()
+        routes = Route.query.all()
+        form.user_id.choices = [(u.user_id, f"{u.first_name} {u.last_name}") for u in users]
+        form.terminal_id.choices = [(t.terminal_id, t.terminal_name) for t in terminals]
+        form.route_id.choices = [(r.route_id, r.route_name) for r in routes]
+
+    elif model == "notifications":
+        users = User.query.all()
+        trips = Trip.query.all()
+        form.user_id.choices = [(u.user_id, f"{u.first_name} {u.last_name}") for u in users]
+        form.trip_id.choices = [(t.trip_id, f"Trip {t.trip_id}") for t in trips]
+
+    elif model == "auditlogs":
+        users = User.query.all()
+        form.user_id.choices = [(u.user_id, f"{u.first_name} {u.last_name}") for u in users]
+    
+    elif model == "jeepneys":
+    # 🔥 THIS is what fills the terminal dropdown
+        form.terminal_id.choices = [
+            (t.terminal_id, t.terminal_name) for t in Terminal.query.all()
+    ]
+    
 # ---------------- BASIC PAGES ----------------
 @app.route('/home')
 def home():
