@@ -598,5 +598,42 @@ def api_add_jeep_to_terminal(terminal_id):
         "terminal_id": terminal_id
     }), 201
 
+# ---------------- API: LIST TERMINALS ----------------
+@app.route("/api/terminals")
+def api_terminals():
+    terminals = Terminal.query.all()
+    return jsonify([
+        {
+            "terminal_id": t.terminal_id,
+            "terminal_name": t.terminal_name,
+            "location": t.location
+        }
+        for t in terminals
+    ])
+
+# ---------------- API: UPDATE PASSENGERS IN TERMINAL QUEUE ----------------
+@app.route("/api/terminal/<int:terminal_id>/jeepneys/<int:jeepney_id>/passengers", methods=["PATCH"])
+def api_update_terminal_jeep_passengers(terminal_id, jeepney_id):
+    data = request.get_json()
+    new_passengers = data.get("passengers")
+
+    if new_passengers is None:
+        return jsonify({"error": "passengers is required"}), 400
+
+    tj = (
+        TerminalJeepneys.query
+        .filter_by(terminal_id=terminal_id, jeepney_id=jeepney_id)
+        .order_by(TerminalJeepneys.arrival_time.desc())
+        .first()
+    )
+
+    if not tj:
+        return jsonify({"error": "TerminalJeep entry not found"}), 404
+
+    tj.current_passengers = new_passengers
+    db.session.commit()
+
+    return jsonify({"ok": True, "current_passengers": tj.current_passengers})
+
 if __name__ == "__main__":
   app.run(debug=True)
