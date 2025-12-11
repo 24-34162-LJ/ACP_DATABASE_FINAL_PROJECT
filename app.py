@@ -758,5 +758,65 @@ def api_map_completed_trips():
         for t in trips
     ])
 
+# ---------------- API: WHEN JEEP DEPARTS FROM AN ORIGIN TERMINAL ----------------
+@app.route("/api/trips/depart", methods=["POST"])
+def api_trip_depart():
+    """
+    Jeep departs from an ORIGIN terminal going to MAIN.
+    - Marks latest TerminalJeepneys row at origin as 'Departed'
+    - Creates Trip(status='En Route') + Seat summary
+    """
+    data = request.get_json() or {}
+
+    jeepney_id = data.get("jeepney_id")
+    origin_id = data.get("origin_terminal_id")
+    destination_id = data.get("destination_terminal_id")
+    passengers = data.get("passengers", 0)
+
+    if not (jeepney_id and origin_id and destination_id):
+        return jsonify({"error": "Missing fields"}), 400
+
+    jeep = Jeepney.query.get_or_404(jeepney_id)
+    cap = jeep.capacity
+
+    # latest queue row sa ORIGIN
+    tj = (
+        TerminalJeepneys.query
+        .filter_by(terminal_id=origin_id, jeepney_id=jeepney_id)
+        .order_by(TerminalJeepneys.arrival_time.desc())
+        .first()
+    )
+    if not tj:
+        return jsonify({"error": "No queue row at origin"}), 404
+
+    tj.status = "Departed"
+    tj.departure_time = datetime.utcnow()
+    tj.current_passengers = passengers
+
+    trip = Trip(
+        jeepney_id=jeepney_id,
+        route_id=data.get("route_id", 1),
+        origin_terminal_id=origin_id,
+        destination_terminal_id=destination_id,
+        departure_time=datetime.utcnow(),
+        status="En Route",
+    )
+    db.session.add(trip)
+    db.session.flush()
+
+    seat = Seat(
+        trip_id=trip.trip_id,
+        total_seats=cap,
+        occupied_seats=passengers,
+        available_seats=max(cap - passengers, 0),
+    )
+    db.session.add(seat)
+
+    jeep.status = "En Route"
+
+    db.session.commit()
+
+    return jsonify({"trip_id": trip.trip_id}), 201
+
 if __name__ == "__main__":
   app.run(debug=True)
