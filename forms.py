@@ -350,3 +350,34 @@ class UserfavoriteForm(FlaskForm):
         validators=[DataRequired()]
     )
     submit = SubmitField("Save Favorite")
+
+# ---------- NOTIFICATION ----------
+
+class NotificationForm(FlaskForm):
+    user_id = SelectField(
+        "User",
+        coerce=int,
+        validators=[DataRequired()]
+    )
+    trip_id = SelectField(
+        "Trip",
+        coerce=int,
+        validators=[DataRequired()]
+    )
+    type_nof = SelectField(
+        "Type",
+        choices=[
+            ("Arrival", "Arrival"),
+            ("Departure", "Departure"),
+            ("FullCapacity", "FullCapacity"),
+            ("System", "System"),
+        ],
+        validators=[DataRequired()],
+    )
+    message = StringField(
+        "Message",
+        validators=[DataRequired()]
+    )
+    is_read = BooleanField("Is Read")
+    submit = SubmitField("Save Notification")
+
