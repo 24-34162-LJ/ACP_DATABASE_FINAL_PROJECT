@@ -180,3 +180,32 @@ class RouteForm(FlaskForm):
     submit = SubmitField("Save Route")
 
 
+# ---------- JEEPNEY ----------
+class JeepneyForm(FlaskForm):
+    plate_number = StringField(
+        "Plate Number",
+        validators=[DataRequired()]
+    )
+    capacity = IntegerField(
+        "Capacity",
+        validators=[DataRequired()]
+    )
+    terminal_id = SelectField(
+        "Assign to Terminal",
+        coerce=int,
+        validators=[DataRequired()]
+    )
+    status = SelectField(
+        "Status",
+        choices=[
+            ("Available", "Available"),
+            ("En Route", "En Route"),
+            ("Maintenance", "Maintenance"),
+            ("Inactive", "Inactive"),
+        ],
+        default="Available",
+        validators=[DataRequired()],
+
+    )
+    submit = SubmitField("Save Jeepney")
+
