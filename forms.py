@@ -326,3 +326,27 @@ class TerminalJeepneysForm(FlaskForm):
         validators=[DataRequired()]
     )
     submit = SubmitField("Save Terminal Jeep Entry")
+
+# ---------- USER FAVORITE ----------
+
+class UserfavoriteForm(FlaskForm):
+    user_id = SelectField(
+        "User",
+        coerce=int,
+        validators=[DataRequired()]
+    )
+    terminal_id = SelectField(
+        "Terminal",
+        coerce=int,
+        validators=[DataRequired()]
+    )
+    route_id = SelectField(
+        "Route",
+        coerce=int,
+        validators=[DataRequired()]
+    )
+    label = StringField(
+        "Label",
+        validators=[DataRequired()]
+    )
+    submit = SubmitField("Save Favorite")
