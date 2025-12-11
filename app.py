@@ -384,6 +384,9 @@ def update_record(model, id):
 def admin():
     return render_template("admin.html")
 
+# ---------------- MAP + MAIN TERMINAL PAGES ----------------
+from flask import current_app
+
 @app.route("/map")
 def map_view():
     main_id = current_app.config.get("MAIN_TERMINAL_ID", MAIN_TERMINAL_ID)
@@ -398,6 +401,22 @@ def map_view():
 
     return render_template("map.html", terminals=terminals, main_terminal_id=main_id)
 
+# SEAT SIMULATION PAGE PER TERMINAL
+@app.route("/seat/<int:terminal_id>")
+def seat(terminal_id):
+    main_id = current_app.config["MAIN_TERMINAL_ID"]
+    if terminal_id == main_id:
+        # redirect main seat page to mainterminal UI
+        return redirect(url_for("mainterminal"))
+
+    terminal = Terminal.query.get_or_404(terminal_id)
+    return render_template(
+        "seat.html",
+        terminal_id=terminal_id,
+        terminal_name=terminal.terminal_name,
+        main_terminal_id=main_id
+    )
+
 @app.route("/mainterminal")
 def mainterminal():
     main_id = current_app.config["MAIN_TERMINAL_ID"]
@@ -406,6 +425,16 @@ def mainterminal():
         "mainterminal.html",
         terminals=terminals,
         main_terminal_id=main_id
+    )
+
+@app.route("/main-destination")
+def main_destination():
+    # re-use mainterminal.html for now
+    terminals = Terminal.query.order_by(Terminal.terminal_id.asc()).all()
+    return render_template(
+        "mainterminal.html",
+        terminals=terminals,
+        main_terminal_id=MAIN_TERMINAL_ID
     )
 
 # ---------------- API: QUEUE DATA FOR A TERMINAL ----------------
