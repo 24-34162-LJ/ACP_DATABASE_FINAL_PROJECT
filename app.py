@@ -291,6 +291,18 @@ def add_record(model):
             return redirect(url_for("view"))
 
     return render_template("add.html", form=form, model=model, action="add")
+ 
+@app.route('/delete/<string:model>/<int:id>', methods=['POST'])
+def delete_record(model, id):
+    model_class = MODEL_MAP.get(model)
+    if model_class is None:
+        abort(404)
+
+    obj = model_class.query.get_or_404(id)
+    db.session.delete(obj)
+    db.session.commit()
+    flash(f'{model.capitalize()} record deleted successfully', "success")
+    return redirect(url_for('view'))
 
 @app.route("/map")
 def map_view():
