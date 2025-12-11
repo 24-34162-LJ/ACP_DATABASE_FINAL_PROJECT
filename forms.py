@@ -152,7 +152,6 @@ class TerminalForm(FlaskForm):
     is_main = BooleanField("Is Main Terminal")
     submit = SubmitField("Save Terminal")
 
-    submit = SubmitField("Save Terminal")
 
 # ---------- ROUTE ----------
 
