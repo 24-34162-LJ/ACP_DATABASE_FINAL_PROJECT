@@ -28,6 +28,33 @@ app.config['WTF_CSRF_ENABLED'] = False
 
 db.init_app(app)
 
+#-------------------------------------------------
+MODEL_MAP = {
+    "users": User,
+    "terminals": Terminal,
+    "routes": Route,
+    "jeepneys": Jeepney,
+    "trips": Trip,
+    "seats": Seat,
+    "terminaljeeps": TerminalJeepneys,
+    "userfavorites": Userfavorite,
+    "notifications": Notification,
+    "auditlogs": Auditlog,
+}
+
+FORM_MAP = {
+    "users": UserForm,
+    "terminals": TerminalForm,
+    "routes": RouteForm,
+    "jeepneys": JeepneyForm,
+    "trips": TripForm,
+    "seats": SeatForm,
+    "terminaljeeps": TerminalJeepneysForm,
+    "userfavorites": UserfavoriteForm,
+    "notifications": NotificationForm,
+    "auditlogs": AuditlogForm,
+}
+
 # ---------------- BASIC PAGES ----------------
 @app.route('/home')
 def home():

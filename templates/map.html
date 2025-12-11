@@ -312,7 +312,7 @@
     {% set slot_classes = ['terminal-1', 'terminal-2', 'terminal-3', 'terminal-4'] %}
     {% for t in terminals[:4] %}
       <div class="terminal {{ slot_classes[loop.index0] }}"
-           onclick="goToTerminal({{ t.terminal_id }})">
+           onclick="goToTerminal({ t.terminal_id })">
         <div class="terminal-label">{{ t.terminal_name }}</div>
         <div class="terminal-meta">
           ID: {{ t.terminal_id }}<br>
@@ -346,7 +346,7 @@
 
 <script>
   // Tell JS what MAIN terminal is (comes from Flask)
-  window.MAIN_TERMINAL_ID = {{ main_terminal_id }};
+  window.MAIN_TERMINAL_ID = { main_terminal_id };
 </script>
 <script src="{{ url_for('static', filename='map/map.js') }}"></script>
 </body>
