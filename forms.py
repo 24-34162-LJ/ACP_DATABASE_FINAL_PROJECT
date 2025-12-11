@@ -82,6 +82,9 @@ class AddTerminal(FlaskForm):
     )
     submit = SubmitField("add terminal")
 
+# -----------------UPDATE FIELD -----------------
+
+# ---------- USER ----------
 
 class UserForm(FlaskForm):
     first_name = StringField(
@@ -128,3 +131,25 @@ class UserForm(FlaskForm):
         validators=[DataRequired()]
     )
     submit = SubmitField("Save User")
+
+# ---------- TERMINAL ----------
+
+class TerminalForm(FlaskForm):
+    terminal_name = StringField(
+        "Terminal Name",
+        validators=[DataRequired()]
+    )
+    location = StringField(
+        "Location",
+        validators=[DataRequired()]
+    )
+
+    status = SelectField(
+        "Status",
+        choices=[("active", "active"), ("inactive", "inactive")],
+        validators=[DataRequired()],
+    )
+    is_main = BooleanField("Is Main Terminal")
+    submit = SubmitField("Save Terminal")
+
+    submit = SubmitField("Save Terminal")
