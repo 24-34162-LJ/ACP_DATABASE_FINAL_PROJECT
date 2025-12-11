@@ -304,6 +304,86 @@ def delete_record(model, id):
     flash(f'{model.capitalize()} record deleted successfully', "success")
     return redirect(url_for('view'))
 
+@app.route('/edit/<string:model>/<int:id>', methods=['GET', 'POST'])
+def update_record(model, id):
+    model_class = MODEL_MAP.get(model)
+    form_class = FORM_MAP.get(model)
+
+    if model_class is None or form_class is None:
+        abort(404)
+
+    obj = model_class.query.get_or_404(id)
+
+    # Bind form to object
+    form = form_class(obj=obj)
+
+    # ---------- FILL CHOICES FOR SELECT FIELDS ----------
+    if model == "routes":
+        terminals = Terminal.query.all()
+        form.start_terminal_id.choices = [(t.terminal_id, t.terminal_name) for t in terminals]
+        form.end_terminal_id.choices = [(t.terminal_id, t.terminal_name) for t in terminals]
+
+    elif model == "trips":
+        form.jeepney_id.choices = [(j.jeepney_id, j.plate_number) for j in Jeepney.query.all()]
+        form.route_id.choices = [(r.route_id, r.route_name) for r in Route.query.all()]
+        terminals = Terminal.query.all()
+        form.origin_terminal_id.choices = [(t.terminal_id, t.terminal_name) for t in terminals]
+        form.destination_terminal_id.choices = [(t.terminal_id, t.terminal_name) for t in terminals]
+
+    elif model == "seats":
+        form.trip_id.choices = [(t.trip_id, f"Trip {t.trip_id}") for t in Trip.query.all()]
+
+    elif model == "terminaljeeps":
+        form.terminal_id.choices = [(t.terminal_id, t.terminal_name) for t in Terminal.query.all()]
+        form.jeepney_id.choices = [(j.jeepney_id, j.plate_number) for j in Jeepney.query.all()]
+
+    elif model == "userfavorites":
+        form.user_id.choices = [(u.user_id, f"{u.first_name} {u.last_name}") for u in User.query.all()]
+        form.terminal_id.choices = [(t.terminal_id, t.terminal_name) for t in Terminal.query.all()]
+        form.route_id.choices = [(r.route_id, r.route_name) for r in Route.query.all()]
+
+    elif model == "notifications":
+        form.user_id.choices = [(u.user_id, f"{u.first_name} {u.last_name}") for u in User.query.all()]
+        form.trip_id.choices = [(t.trip_id, f"Trip {t.trip_id}") for t in Trip.query.all()]
+
+    elif model == "auditlogs":
+        form.user_id.choices = [(u.user_id, f"{u.first_name} {u.last_name}") for u in User.query.all()]
+        
+    elif model == "jeepneys":
+        # IMPORTANT — Jeepney terminal dropdown
+        form.terminal_id.choices = [(t.terminal_id, t.terminal_name) for t in Terminal.query.all()]
+
+
+    # ---------- POST: Saving Changes ----------
+    if form.validate_on_submit():
+
+        # ---- SPECIAL CASE: USERS (password hashing & handling) ----
+        if model == "users":
+            obj.first_name = form.first_name.data
+            obj.last_name = form.last_name.data
+            obj.email = form.email.data
+            obj.role = form.role.data
+            obj.level = form.level.data
+            obj.xp_points = form.xp_points.data
+
+            # If password was entered, update the hash
+            if form.password.data:
+                obj.password_hash = generate_password_hash(form.password.data)
+
+        else:
+            # Normal case
+            form.populate_obj(obj)
+
+        db.session.commit()
+        flash(f"{model.capitalize()} updated successfully!", "success")
+        return redirect(url_for('view'))
+
+    return render_template("add.html", form=form, model=model, action="edit")
+
+@app.route("/admin")
+def admin():
+    return render_template("admin.html")
+
 @app.route("/map")
 def map_view():
     main_id = current_app.config.get("MAIN_TERMINAL_ID", MAIN_TERMINAL_ID)
