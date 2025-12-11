@@ -154,27 +154,29 @@ class TerminalForm(FlaskForm):
 
     submit = SubmitField("Save Terminal")
 
-    # ---------- ROUTE ----------
-    class RouteForm(FlaskForm):
-        route_name = StringField(
-            "Route Name",
-            validators=[DataRequired()]
-        )
-        # These will be SelectFields filled with terminal choices in the route
-        start_terminal_id = SelectField(
-            "Start Terminal",
-            coerce=int,
-            validators=[DataRequired()]
-        )
-        end_terminal_id = SelectField(
-            "End Terminal",
-            coerce=int,
-            validators=[DataRequired()]
-        )
+# ---------- ROUTE ----------
+class RouteForm(FlaskForm):
+    route_name = StringField(
+        "Route Name",
+        validators=[DataRequired()]
+    )
+    # These will be SelectFields filled with terminal choices in the route
+    start_terminal_id = SelectField(
+        "Start Terminal",
+        coerce=int,
+        validators=[DataRequired()]
+    )
+    end_terminal_id = SelectField(
+        "End Terminal",
+        coerce=int,
+        validators=[DataRequired()]
+    )
 
-        estimated_time_minutes = IntegerField(
-            "Estimated Time (minutes)",
-            validators=[DataRequired()]
-        )
+    estimated_time_minutes = IntegerField(
+        "Estimated Time (minutes)",
+        validators=[DataRequired()]
+    )
 
-        submit = SubmitField("Save Route")
+    submit = SubmitField("Save Route")
+
+
