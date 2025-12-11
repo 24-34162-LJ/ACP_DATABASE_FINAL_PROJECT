@@ -703,5 +703,73 @@ def api_main_origin_jeeps():
 
     return jsonify(result[:4])
 
+# ---------------- API: MAIN ORIGIN JEEPS (FOR MAINTERMINAL UI) ----------------
+@app.route("/api/main/origin-jeeps")
+def api_main_origin_jeeps():
+    """
+    Returns the latest 'Departed' jeep from each ORIGIN terminal
+    that is currently en route to MAIN TERMINAL.
+    """
+
+    main_id = current_app.config.get("MAIN_TERMINAL_ID", MAIN_TERMINAL_ID)
+
+    # Subquery → find latest departure per terminal    
+    subq = (
+        db.session.query(
+            TerminalJeepneys.terminal_id,
+            func.max(TerminalJeepneys.departure_time).label("max_dep")
+        )
+        .filter(
+            TerminalJeepneys.status == "Departed",
+            TerminalJeepneys.terminal_id != main_id      # ← exclude MAIN
+        )
+        .group_by(TerminalJeepneys.terminal_id)
+        .subquery()
+    )
+    
+    rows = (
+        db.session.query(TerminalJeepneys, Jeepney, Terminal)
+        .join(
+            subq,
+            (TerminalJeepneys.terminal_id == subq.c.terminal_id) &
+            (TerminalJeepneys.departure_time == subq.c.max_dep)
+        )
+        .join(Jeepney, TerminalJeepneys.jeepney_id == Jeepney.jeepney_id)
+        .join(Terminal, TerminalJeepneys.terminal_id == Terminal.terminal_id)
+        .filter(Terminal.terminal_id != main_id)  # extra guard
+        .order_by(TerminalJeepneys.terminal_id.asc())
+        .all()
+    )
+
+    result = []
+
+    for tj, jeep, term in rows:
+
+        # Skip jeeps NOT going to MAIN TERMINAL
+        trip = (
+            Trip.query
+            .filter_by(
+                jeepney_id=jeep.jeepney_id,
+                status="En Route",
+                destination_terminal_id=main_id
+            )
+            .order_by(Trip.departure_time.desc())
+            .first()
+        )
+
+        if not trip:
+            continue  # jeep is not currently heading to MAIN
+
+        result.append({
+            "jeepney_id": jeep.jeepney_id,
+            "plate_number": jeep.plate_number,
+            "terminal_id": term.terminal_id,
+            "terminal_name": term.terminal_name,
+            "capacity": jeep.capacity,
+            "passengers": tj.current_passengers or 0
+        })
+
+    return jsonify(result[:4])
+
 if __name__ == "__main__":
   app.run(debug=True)
