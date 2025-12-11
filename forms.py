@@ -259,3 +259,24 @@ class TripForm(FlaskForm):
 
     submit = SubmitField("Save Trip")
 
+
+# ---------- SEAT ----------
+class SeatForm(FlaskForm):
+    trip_id = SelectField(
+        "Trip",
+        coerce=int,
+        validators=[DataRequired()]
+    )
+    total_seats = IntegerField(
+        "Total Seats",
+        validators=[DataRequired()]
+    )
+    available_seats = IntegerField(
+        "Available Seats",
+        validators=[DataRequired()]
+    )
+    occupied_seats = IntegerField(
+        "Occupied Seats",
+        validators=[DataRequired()]
+    )
+    submit = SubmitField("Save Seat")
