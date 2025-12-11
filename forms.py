@@ -81,3 +81,50 @@ class AddTerminal(FlaskForm):
         validators=[DataRequired()]
     )
     submit = SubmitField("add terminal")
+
+
+class UserForm(FlaskForm):
+    first_name = StringField(
+        "First Name",
+        validators=[DataRequired()]
+    )
+    last_name = StringField(
+        "Last Name",
+        validators=[DataRequired()]
+    )
+
+    email = StringField(
+        "Email",
+        validators=[DataRequired(), Email()]
+    )
+
+    password = PasswordField(
+        "Password",
+        validators=[DataRequired(), Length(min=6)]
+    )  # to get the password
+
+    confirm_password = PasswordField(
+        "Confirm Password",
+        validators=[DataRequired(), EqualTo('password')]
+    )  # to make sure the password is same
+
+    role = SelectField(
+        "Role",
+        choices=[
+            ("player", "player"),
+            ("operator", "operator"),
+            ("viewer", "viewer"),
+            ("admin", "admin"),
+        ],
+        validators=[DataRequired()],
+    )
+
+    level = IntegerField(
+        "Level",
+        validators=[DataRequired()]
+    )
+    xp_points = IntegerField(
+        "XP Points",
+        validators=[DataRequired()]
+    )
+    submit = SubmitField("Save User")
