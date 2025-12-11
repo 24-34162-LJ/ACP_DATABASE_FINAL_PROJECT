@@ -480,6 +480,82 @@ def api_terminal_queue(terminal_id):
 
     return jsonify(data)
 
+ # ---------------- API: WHEN JEEP DEPARTS FROM MAIN TERMINAL ----------------
+@app.route("/api/trips/depart-from-main", methods=["POST"])
+def api_trip_depart_from_main():
+    """
+    Jeep departs from MAIN going back to its origin terminal.
+    We DO NOT trust destination_terminal_id from frontend.
+    Instead, we look at the last trip that arrived to MAIN and
+    send the jeep back to that origin terminal.
+    """
+    data = request.get_json() or {}
+
+    jeepney_id = data.get("jeepney_id")
+    passengers = data.get("passengers", 0)
+
+    if not jeepney_id:
+        return jsonify({"error": "jeepney_id is required"}), 400
+
+    main_id = current_app.config["MAIN_TERMINAL_ID"]
+
+    jeep = Jeepney.query.get_or_404(jeepney_id)
+    capacity = jeep.capacity
+
+    # 1) Find latest queue row in MAIN (Waiting/Arrived) and mark it Departed
+    tj_main = (
+        TerminalJeepneys.query
+        .filter_by(terminal_id=main_id, jeepney_id=jeepney_id)
+        .order_by(TerminalJeepneys.arrival_time.desc())
+        .first()
+    )
+
+    if tj_main:
+        tj_main.status = "Departed"
+        tj_main.departure_time = datetime.utcnow()
+        tj_main.current_passengers = passengers
+
+    # 2) Find the last trip that ARRIVED TO MAIN for this jeep
+    #    That trip's origin_terminal_id will be the new destination
+    last_inbound_trip = (
+        Trip.query
+        .filter_by(jeepney_id=jeepney_id, destination_terminal_id=main_id)
+        .order_by(Trip.arrival_time.desc())
+        .first()
+    )
+
+    if not last_inbound_trip:
+        return jsonify({
+            "error": "No inbound trip to MAIN found for this jeep, cannot determine origin terminal."
+        }), 400
+
+    destination_terminal_id = last_inbound_trip.origin_terminal_id
+
+    # 3) Create NEW trip: MAIN -> PREVIOUS ORIGIN
+    trip = Trip(
+        jeepney_id=jeepney_id,
+        route_id=data.get("route_id", 1),
+        origin_terminal_id=main_id,
+        destination_terminal_id=destination_terminal_id,
+        departure_time=datetime.utcnow(),
+        status="En Route",
+    )
+    db.session.add(trip)
+    db.session.flush()
+
+    # 4) Seat summary
+    seat = Seat(
+        trip_id=trip.trip_id,
+        total_seats=capacity,
+        occupied_seats=passengers,
+        available_seats=max(capacity - passengers, 0),
+    )
+    db.session.add(seat)
+
+    jeep.status = "En Route"
+    db.session.commit()
+
+    return jsonify({"trip_id": trip.trip_id}), 201
 # ---------------- API: ADD JEEP TO TERMINAL ----------------
 @app.route("/api/terminal/<int:terminal_id>/jeepneys", methods=["POST"])
 def api_add_jeep_to_terminal(terminal_id):
