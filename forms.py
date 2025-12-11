@@ -381,3 +381,36 @@ class NotificationForm(FlaskForm):
     is_read = BooleanField("Is Read")
     submit = SubmitField("Save Notification")
 
+# ---------- AUDIT LOG ----------
+
+class AuditlogForm(FlaskForm):
+    user_id = SelectField(
+        "User",
+        coerce=int,
+        validators=[DataRequired()]
+    )
+    table_name = StringField(
+        "Table Name",
+        validators=[DataRequired()]
+    )
+    record_id = IntegerField(
+        "Record ID",
+        validators=[DataRequired()]
+    )
+
+    action = SelectField(
+        "Action",
+        choices=[
+            ("INSERT", "INSERT"),
+            ("UPDATE", "UPDATE"),
+            ("DELETE", "DELETE"),
+        ],
+        validators=[DataRequired()],
+    )
+
+    description = StringField(
+        "Description",
+        validators=[Optional()]
+    )
+
+    submit = SubmitField("Save Audit Log")
