@@ -155,6 +155,7 @@ class TerminalForm(FlaskForm):
     submit = SubmitField("Save Terminal")
 
 # ---------- ROUTE ----------
+
 class RouteForm(FlaskForm):
     route_name = StringField(
         "Route Name",
@@ -181,6 +182,7 @@ class RouteForm(FlaskForm):
 
 
 # ---------- JEEPNEY ----------
+
 class JeepneyForm(FlaskForm):
     plate_number = StringField(
         "Plate Number",
@@ -211,6 +213,7 @@ class JeepneyForm(FlaskForm):
 
 
 # ---------- TRIP ----------
+
 class TripForm(FlaskForm):
     jeepney_id = SelectField(
         "Jeepney",
@@ -261,6 +264,7 @@ class TripForm(FlaskForm):
 
 
 # ---------- SEAT ----------
+
 class SeatForm(FlaskForm):
     trip_id = SelectField(
         "Trip",
@@ -280,3 +284,45 @@ class SeatForm(FlaskForm):
         validators=[DataRequired()]
     )
     submit = SubmitField("Save Seat")
+
+# ---------- TERMINAL JEEPS ----------
+
+class TerminalJeepneysForm(FlaskForm):
+    terminal_id = SelectField(
+        "Terminal",
+        coerce=int,
+        validators=[DataRequired()]
+    )
+    jeepney_id = SelectField(
+        "Jeepney",
+        coerce=int,
+        validators=[DataRequired()]
+    )
+
+    arrival_time = DateTimeLocalField(
+        "Arrival Time",
+        format="%Y-%m-%dT%H:%M",
+        validators=[DataRequired()],
+    )
+    departure_time = DateTimeLocalField(
+        "Departure Time",
+        format="%Y-%m-%dT%H:%M",
+        validators=[Optional()],
+    )
+
+    status = SelectField(
+        "Status",
+        choices=[
+            ("Waiting", "Waiting"),
+            ("Boarding", "Boarding"),
+            ("Departed", "Departed"),
+            ("Arrived", "Arrived"),
+        ],
+        validators=[DataRequired()],
+    )
+
+    current_passengers = IntegerField(
+        "Current Passengers",
+        validators=[DataRequired()]
+    )
+    submit = SubmitField("Save Terminal Jeep Entry")
