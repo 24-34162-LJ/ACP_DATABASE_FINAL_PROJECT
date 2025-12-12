@@ -202,3 +202,86 @@ class Jeepney(db.Model):
         cascade="all, delete-orphan",
         passive_deletes=True
     )
+
+class Trip(db.Model):
+    __tablename__ = "trips"
+
+    trip_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+
+    jeepney_id = db.Column(
+        db.Integer,
+        db.ForeignKey('jeepneys.jeepney_id', ondelete="CASCADE"),
+        nullable=False
+    )
+
+    route_id = db.Column(
+        db.Integer,
+        db.ForeignKey('routes.route_id', ondelete="CASCADE"),
+        nullable=False
+    )
+
+    origin_terminal_id = db.Column(
+        db.Integer,
+        db.ForeignKey('terminals.terminal_id'),
+        nullable=False
+    )
+    destination_terminal_id = db.Column(
+        db.Integer,
+        db.ForeignKey('terminals.terminal_id'),
+        nullable=False
+    )
+    departure_time = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow
+    )
+    arrival_time = db.Column(db.DateTime, nullable=True)
+
+    status = db.Column(
+        db.Enum('Scheduled', 'Waiting', 'En Route', 'Arrived', 'Completed', 'Cancelled', name='trip_status'),
+        nullable=False,
+        default='Scheduled'
+    )
+
+    # relationship
+    jeepney_fk = db.relationship(
+        "Jeepney",
+        foreign_keys=[jeepney_id],
+        back_populates='trip_pk'
+    )
+
+    route_fk = db.relationship(
+        "Route",
+        foreign_keys=[route_id],
+        back_populates='trip_pk'
+    )
+
+    origin_fk = db.relationship(
+        "Terminal",
+        foreign_keys=[origin_terminal_id],
+        back_populates='origin_trip_pk'
+    )
+
+    destination_fk = db.relationship(
+        "Terminal",
+        foreign_keys=[destination_terminal_id],
+        back_populates='destination_trip_pk'
+    )
+
+    seats_pk = db.relationship(
+        "Seat",
+        back_populates="trip_fk",
+        uselist=False,
+        cascade="all, delete-orphan",
+        passive_deletes=True
+    )
+
+    notification_trip_pk = db.relationship(
+        "Notification",
+        foreign_keys='Notification.trip_id',
+        back_populates="notification_trip_fk",
+        cascade="all, delete-orphan",
+        passive_deletes=True
+    )
+
+# trip seats
