@@ -119,3 +119,58 @@ class Terminal(db.Model):
 
     def __repr__(self):
         return f"<terminal {self.terminal_name}>"
+    
+class Route(db.Model):
+
+    __tablename__ = "routes"
+
+    route_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    route_name = db.Column(db.String(100), nullable=False)
+
+    start_terminal_id = db.Column(
+        db.Integer,
+        db.ForeignKey('terminals.terminal_id'),
+        nullable=False
+    )
+    
+    end_terminal_id = db.Column(
+        db.Integer,
+        db.ForeignKey('terminals.terminal_id'),
+        nullable=False
+    )
+
+    estimated_time_minutes = db.Column(
+        db.Integer,
+        nullable=False
+    )
+    # to relation
+
+    start_terminal = db.relationship(
+        "Terminal",
+        foreign_keys=[start_terminal_id],
+        back_populates="origin_route"
+    )
+
+    end_terminal = db.relationship(
+        "Terminal",
+        foreign_keys=[end_terminal_id],
+        back_populates="destination_route"
+    )
+
+    trip_pk = db.relationship(
+        "Trip",
+        foreign_keys='Trip.route_id',
+        back_populates="route_fk",
+        cascade="all, delete-orphan",
+        passive_deletes=True
+    )
+
+    favorite_route_pk = db.relationship(
+        "Userfavorite",
+        foreign_keys='Userfavorite.route_id',
+        back_populates='favorite_route_fk',
+        cascade="all, delete-orphan",
+        passive_deletes=True
+    )
+
+# jeepneys
