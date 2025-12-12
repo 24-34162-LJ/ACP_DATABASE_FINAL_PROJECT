@@ -132,7 +132,7 @@ class Route(db.Model):
         db.ForeignKey('terminals.terminal_id'),
         nullable=False
     )
-    
+
     end_terminal_id = db.Column(
         db.Integer,
         db.ForeignKey('terminals.terminal_id'),
@@ -174,3 +174,31 @@ class Route(db.Model):
     )
 
 # jeepneys
+
+class Jeepney(db.Model):
+    __tablename__ = "jeepneys"
+
+    jeepney_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    plate_number = db.Column(db.String(20), nullable=False)
+    capacity = db.Column(db.Integer, nullable=False)
+    status = db.Column(
+        db.Enum('Available', 'En Route', 'Maintenance', 'Inactive', name='jeep_status'),
+        nullable=False,
+        default='Available'
+    )
+
+    trip_pk = db.relationship(
+        "Trip",
+        foreign_keys="Trip.jeepney_id",
+        back_populates="jeepney_fk",
+        cascade="all, delete-orphan",
+        passive_deletes=True
+    )
+
+    jeep_jeep_pk = db.relationship(
+        "TerminalJeepneys",
+        foreign_keys="TerminalJeepneys.jeepney_id",
+        back_populates='jeep_jeep_fk',
+        cascade="all, delete-orphan",
+        passive_deletes=True
+    )
