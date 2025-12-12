@@ -285,3 +285,32 @@ class Trip(db.Model):
     )
 
 # trip seats
+
+class Seat(db.Model):
+
+    __tablename__ = "seats"
+
+    trip_seat_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+
+    trip_id = db.Column(
+        db.Integer,
+        db.ForeignKey('trips.trip_id', ondelete="CASCADE"),
+        nullable=False
+    )
+
+    total_seats = db.Column(db.Integer, nullable=False)
+    available_seats = db.Column(db.Integer, nullable=False)
+    occupied_seats = db.Column(db.Integer, nullable=False)
+
+    last_updated = db.Column(
+        db.DateTime,
+        nullable=False,
+        server_default=func.now(),
+        onupdate=func.now()
+    )
+
+    trip_fk = db.relationship(
+        "Trip",
+        foreign_keys=[trip_id],
+        back_populates="seats_pk"
+    )
