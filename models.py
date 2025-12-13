@@ -327,7 +327,7 @@ class TerminalJeepneys(db.Model):
         db.ForeignKey('terminals.terminal_id', ondelete="CASCADE"),
         nullable=False
     )
-    
+     
     jeepney_id = db.Column(
         db.Integer,
         db.ForeignKey('jeepneys.jeepney_id', ondelete="CASCADE"),
@@ -356,4 +356,58 @@ class TerminalJeepneys(db.Model):
         "Jeepney",
         foreign_keys=[jeepney_id],
         back_populates='jeep_jeep_pk'
+    )
+
+# user_favorites
+
+class Userfavorite(db.Model):
+
+    __tablename__ = "userfavorites"
+
+    favorite_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey('users.user_id', ondelete="CASCADE"),
+        nullable=False
+    )
+
+    terminal_id = db.Column(
+        db.Integer,
+        db.ForeignKey('terminals.terminal_id', ondelete="CASCADE"),
+        nullable=True
+    )
+
+    route_id = db.Column(
+        db.Integer,
+        db.ForeignKey('routes.route_id', ondelete="CASCADE"),
+        nullable=True
+    )
+
+    label = db.Column(db.String(100), nullable=False, default="")
+
+    date_created = db.Column(
+        db.DateTime,
+        nullable=False,
+        server_default=func.now()
+    )
+
+    # to relationship
+
+    favorite_fk = db.relationship(
+        "User",
+        foreign_keys=[user_id],
+        back_populates='favorite_pk'
+    )
+
+    favorite_terminal_fk = db.relationship(
+        "Terminal",
+        foreign_keys=[terminal_id],
+        back_populates='favorite_terminal_pk'
+    )
+
+    favorite_route_fk = db.relationship(
+        "Route",
+        foreign_keys=[route_id],
+        back_populates='favorite_route_pk'
     )
