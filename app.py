@@ -640,6 +640,28 @@ def add_favorite():
     if not terminal_id and not route_id:
         return jsonify({"error": "terminal_id or route_id is required"}), 400
     
+    # avoid duplicate favorites per user / terminal / route
+    existing = Userfavorite.query.filter_by(
+        user_id=user_id,
+        terminal_id=terminal_id,
+        route_id=route_id
+    ).first()
+
+    if existing:
+        # if already exists, just update the label (optional)
+        if label:
+            existing.label = label
+            db.session.commit()
+        return jsonify({"message": "Already in favorites"}), 200
+
+    fav = Userfavorite(
+        user_id=user_id,
+        terminal_id=terminal_id,
+        route_id=route_id,
+        label=label
+
+    )
+            
         # special case for users because of password hashing
         if model == "jeepneys":
             item = Jeepney(
