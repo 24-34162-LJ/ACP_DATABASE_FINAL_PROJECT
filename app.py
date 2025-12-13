@@ -13,7 +13,9 @@ from forms import (
 )
 
 from datetime import datetime
-from sqlalchemy import func
+from sqlalchemy import func, or_, and_ 
+from functools import wraps
+import os
 
 # ---------------- GLOBAL CONSTANTS ----------------
 MAIN_TERMINAL_ID = 1
