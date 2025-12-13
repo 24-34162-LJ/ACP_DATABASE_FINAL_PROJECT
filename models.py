@@ -411,3 +411,54 @@ class Userfavorite(db.Model):
         foreign_keys=[route_id],
         back_populates='favorite_route_pk'
     )
+
+# notifications
+
+class Notification(db.Model):
+
+    __tablename__ = "notifications"
+
+    notification_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey('users.user_id', ondelete="CASCADE"),
+        nullable=False
+    )
+
+    trip_id = db.Column(
+        db.Integer,
+        db.ForeignKey('trips.trip_id', ondelete="CASCADE"),
+        nullable=False
+    )
+
+    type_nof = db.Column(
+        db.Enum('Arrival', 'Departure', 'FullCapacity', 'System', name='type_of'),
+        nullable=False
+    )
+
+    message = db.Column(db.String(200), nullable=False)
+    is_read = db.Column(
+        db.Boolean,
+        nullable=False,
+        server_default=text('FALSE')
+    )
+    date_sent = db.Column(
+        db.DateTime,
+        nullable=False,
+        server_default=func.now()
+    )
+
+    # to relationship
+
+    notification_fk = db.relationship(
+        "User",
+        foreign_keys=[user_id],
+        back_populates='notification_pk'
+    )
+
+    notification_trip_fk = db.relationship(
+        "Trip",
+        foreign_keys=[trip_id],
+        back_populates="notification_trip_pk"
+    )
