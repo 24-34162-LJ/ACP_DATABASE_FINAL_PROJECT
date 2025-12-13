@@ -1267,46 +1267,37 @@ def api_map_live_trips():
     return jsonify(result)                  
     
 # ---------------- API: LIVE TRIPS FOR MAP ANIMATION ----------------
-@app.route("/api/map/live-trips")
-def api_map_live_trips():
-    main_id = current_app.config.get("MAIN_TERMINAL_ID", MAIN_TERMINAL_ID)
+app.route("/api/favorites", methods=["POST"])
+def api_add_favorite():
+    data = request.get_json() or {}
 
-    rows = (
-        db.session.query(
-            Trip.trip_id,
-            Trip.jeepney_id,
-            Trip.origin_terminal_id,
-            Trip.destination_terminal_id,
-            Trip.status,
-            Jeepney.capacity,
-            Seat.occupied_seats.label("passengers")
-        )
-        .join(Jeepney, Trip.jeepney_id == Jeepney.jeepney_id)
-        .outerjoin(Seat, Seat.trip_id == Trip.trip_id)
-        .filter(Trip.status == "En Route")
-        .filter(
-            (Trip.origin_terminal_id == main_id) |
-            (Trip.destination_terminal_id == main_id)
-        )
-        .all()
+    user_id = session.get("user_id")    # or from JWT / whatever you use
+    terminal_id = data.get("terminal_id")
+    route_id = data.get("route_id")
+    # optional custom label from frontend
+    raw_label = data.get("label")
+
+    # Fallback label if none provided
+    if not raw_label:
+        # you can customize this any way you like
+        # e.g., include terminal or route info
+        raw_label = f"Favorite route {route_id} @ terminal {terminal_id}"
+
+    fav = Userfavorite(
+        user_id=user_id,
+        terminal_id=terminal_id,
+        route_id=route_id,
+        label=raw_label,          
     )
 
-    result = []
-    for row in rows:
-        result.append({
-            "trip_id": row.trip_id,
-            "jeepney_id": row.jeepney_id,
-            "origin_terminal_id": row.origin_terminal_id,
-            "destination_terminal_id": row.destination_terminal_id,
-            "status": row.status,
-            "capacity": row.capacity,
-            "passengers": row.passengers or 0,
-        })
+    db.session.add(fav)
+    db.session.commit()
 
-    # quick debug if you want:
-    # print("LIVE TRIPS:", result)
-
-    return jsonify(result)
+    return jsonify({
+        "ok": True,
+        "favorite_id": fav.favorite_id,
+        "label": fav.label,
+    }), 201
 
 @app.route("/api/map/completed-trips")
 def api_map_completed_trips():
