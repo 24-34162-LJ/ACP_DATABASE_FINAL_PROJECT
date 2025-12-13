@@ -444,11 +444,16 @@ def add_record(model):
 
     if ModelClass is None or FormClass is None:
         abort(404)
-        
+
     form = FormClass()
 
     # important: set choices BEFORE validate_on_submit
     set_form_choices(form, model)
+
+    # Debug: print form data/errors to server log when POSTing
+    if request.method == "POST":
+        print("ADD FORM POST to /add/{} -- form.data:".format(model), form.data)
+        print("ADD FORM ERRORS:", form.errors)
 
     if form.validate_on_submit():
         # special case for users because of password hashing
