@@ -74,6 +74,14 @@ class AddTerminal(FlaskForm):
         "terminal location",
         validators=[DataRequired()]
     )
+    route_name = StringField(
+        "Route Name", 
+        validators=[DataRequired()]
+    )
+    estimated_time_minutes = IntegerField(
+        "Estimated time (minutes)",
+        validators=[Optional(), NumberRange(min=0)]
+    )
     status = SelectField(
         "Select status",
         choices=[("active","active"),("inactive","inactive")],
