@@ -612,6 +612,34 @@ def add_record(model):
             # keep the user on the add page so they can correct input
             return render_template("add.html", form=form, model=model, action="add")
         
+        # If GET or validation failed, show the add form
+        return render_template("add.html", form=form, model=model, action="add")
+    
+    @app.route("/favorites/add", methods=["POST"])
+def add_favorite():
+    """
+    Add a favorite terminal or route for the current user.
+    Accepts form or JSON:
+      - terminal_id (optional)
+      - route_id (optional)
+      - label (optional)
+    At least one of terminal_id or route_id must be present.
+    """
+    user_id = session.get("user_id")  
+    
+    # support both JSON and normal form without errors
+    data = request.get_json(silent=True) or request.form
+
+    terminal_id = data.get("terminal_id")
+    route_id = data.get("route_id")
+    label = (data.get("label") or "").strip()
+
+    terminal_id = int(terminal_id) if terminal_id else None
+    route_id = int(route_id) if route_id else None
+
+    if not terminal_id and not route_id:
+        return jsonify({"error": "terminal_id or route_id is required"}), 400
+    
         # special case for users because of password hashing
         if model == "jeepneys":
             item = Jeepney(
