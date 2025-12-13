@@ -983,7 +983,8 @@ def map_view():
         terminals=terminals, 
         main_terminal_id=main_id
         routes_by_term=routes_by_term,
-        )
+    
+    )
 
 # SEAT SIMULATION PAGE PER TERMINAL
 @app.route("/seat/<int:terminal_id>")
@@ -1137,6 +1138,10 @@ def api_trip_depart_from_main():
     db.session.add(seat)
 
     jeep.status = "En Route"
+    notify_trip_event(trip, "Departure")
+    if passengers >= capacity:
+        notify_trip_event(trip, "FullCapacity")
+        
     db.session.commit()
 
     return jsonify({"trip_id": trip.trip_id}), 201
