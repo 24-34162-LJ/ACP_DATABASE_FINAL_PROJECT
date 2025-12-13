@@ -1224,44 +1224,45 @@ def api_update_terminal_jeep_passengers(terminal_id, jeepney_id):
 
     return jsonify({"ok": True, "current_passengers": tj.current_passengers})
 
-# ---------------- API: MAIN ORIGIN JEEPS (FOR MAINTERMINAL UI) ----------------
-@app.route("/api/main/origin-jeeps")
-def api_main_origin_jeeps():
-    """
-    List the latest jeep currently traveling TO the MAIN TERMINAL
-    (one per origin terminal).
-    """
-
+# ---------------- API: LIVE TRIPS FOR MAP ANIMATION ----------------
+@app.route("/api/map/live-trips")
+def api_map_live_trips():
     main_id = current_app.config.get("MAIN_TERMINAL_ID", MAIN_TERMINAL_ID)
 
-    # Get all live trips heading to MAIN
-    trips = (
-        Trip.query
-        .filter_by(status="En Route", destination_terminal_id=main_id)
-        .order_by(Trip.departure_time.desc())
+    rows = (
+        db.session.query(
+            Trip.trip_id,
+            Trip.jeepney_id,
+            Trip.origin_terminal_id,
+            Trip.destination_terminal_id,
+            Trip.status,
+            Jeepney.capacity,
+            Seat.occupied_seats.label("passengers")
+        )
+        .join(Jeepney, Trip.jeepney_id == Jeepney.jeepney_id)
+        .outerjoin(Seat, Seat.trip_id == Trip.trip_id)
+        .filter(Trip.status == "En Route")
+        .filter(
+            (Trip.origin_terminal_id == main_id) |
+            (Trip.destination_terminal_id == main_id)
+        )
         .all()
     )
 
-    latest = {}
-    for t in trips:
-        if t.origin_terminal_id not in latest:
-            latest[t.origin_terminal_id] = t  # first is the newest
-
-    result = {}
-
-    for origin_id, trip in latest.items():
-        jeep = Jeepney.query.get(trip.jeepney_id)
-        term = Terminal.query.get(origin_id)
-        seat = Seat.query.filter_by(trip_id=trip.trip_id).first()
-
+    result = []
+    for row in rows:
         result.append({
-            "jeepney_id": jeep.jeepney_id,
-            "plate_number": jeep.plate_number,
-            "terminal_id": term.terminal_id,
-            "terminal_name": term.terminal_name,
-            "capacity": jeep.capacity,
-            "passengers": seat.occupied_seats if seat else 0
+            "trip_id": row.trip_id,
+            "jeepney_id": row.jeepney_id,
+            "origin_terminal_id": row.origin_terminal_id,
+            "destination_terminal_id": row.destination_terminal_id,
+            "status": row.status,
+            "capacity": row.capacity,
+            "passengers": row.passengers or 0,
         })
+
+    # quick debug if you want:
+    # print("LIVE TRIPS:", result)
 
     return jsonify(result)                  
     
