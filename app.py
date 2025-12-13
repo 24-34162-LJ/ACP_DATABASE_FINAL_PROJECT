@@ -905,6 +905,49 @@ def delete_notification(notif_id):
     db.session.commit()
     return redirect(url_for("notifications_page"))
 
+@app.route("/auditlogs")   # only admin can view logs
+def auditlogs_page():
+    # Filters from query string
+    user_id = request.args.get("user_id", type=int)
+    table_name = request.args.get("table_name", type=str)
+    action = request.args.get("action", type=str)
+    date_from = request.args.get("date_from", type=str)
+    date_to = request.args.get("date_to", type=str)
+
+    q = Auditlog.query.join(User, Auditlog.user_id == User.user_id)
+
+    if user_id:
+        q = q.filter(Auditlog.user_id == user_id)
+    if table_name:
+        q = q.filter(Auditlog.table_name == table_name)
+    if action:
+        q = q.filter(Auditlog.action == action)
+    if date_from:
+        q = q.filter(Auditlog.timestamp >= date_from)
+    if date_to:
+        # include whole day
+        q = q.filter(Auditlog.timestamp <= f"{date_to} 23:59:59")
+
+    logs = q.order_by(Auditlog.timestamp.desc()).limit(300).all()
+
+    users = User.query.order_by(User.first_name.asc()).all()
+    table_names = [row[0] for row in db.session.query(Auditlog.table_name).distinct().all()]
+    actions = ['INSERT', 'UPDATE', 'DELETE']
+
+    return render_template(
+        "auditlogs.html",
+        logs=logs,
+        users=users,
+        table_names=table_names,
+        actions=actions,
+        filters={
+            "user_id": user_id,
+            "table_name": table_name,
+            "action": action,
+            "date_from": date_from,
+            "date_to": date_to,
+        }
+    )
 
 # ---------------- MAP + MAIN TERMINAL PAGES ----------------
 from flask import current_app
