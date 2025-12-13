@@ -1368,6 +1368,19 @@ def api_trip_depart():
 
     jeep.status = "En Route"
 
+    notify_trip_event(trip, "Departure")
+
+    # Optional: Full capacity notification (if you want full-cap alerts here)
+    if passengers >= cap:
+        notify_trip_event(trip, "FullCapacity")
+        
+    create_audit_log(
+        action="INSERT",
+        table_name="trips",
+        record_id=trip.trip_id,
+        description=f"Jeep {jeepney_id} departed from terminal {origin_id} to MAIN({destination_id}) with {passengers} passengers."
+    )
+
     db.session.commit()
 
     return jsonify({"trip_id": trip.trip_id}), 201
