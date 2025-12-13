@@ -430,9 +430,9 @@ def Add():
         )
 
         # 5) Save everything
-        
+
         db.session.commit()
-        flash("data added in database")
+        flash("Terminal and route added to database", "success")
         return redirect(url_for("operator"))
     return render_template("terminal.html", form=form)
 
