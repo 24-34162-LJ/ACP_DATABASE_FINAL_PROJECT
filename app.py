@@ -149,6 +149,12 @@ def notify_trip_event(trip, type_nof, custom_message=None):
     if not favs:
         return  # no subscribers; nothing to do
     
+    user_ids = {f.user_id for f in favs}
+
+    jeep = Jeepney.query.get(trip.jeepney_id)
+    origin = Terminal.query.get(trip.origin_terminal_id)
+    dest = Terminal.query.get(trip.destination_terminal_id)
+
 # ---------------- BASIC PAGES ----------------
 @app.route('/home')
 def home():
