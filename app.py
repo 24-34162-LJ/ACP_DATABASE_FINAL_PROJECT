@@ -694,6 +694,36 @@ def delete_record(model, id):
     flash(f'{model.capitalize()} record deleted successfully', "success")
     return redirect(url_for('view'))
 
+@app.route("/favorites/remove", methods=["POST"])
+def remove_favorite():
+    user_id = session.get("user_id")
+
+    # ✅ Safely support both JSON & form
+    if request.is_json:
+        data = request.get_json() or {}
+    else:
+        data = request.form
+
+    terminal_id = data.get("terminal_id")
+    route_id = data.get("route_id")
+
+    terminal_id = int(terminal_id) if terminal_id else None
+    route_id = int(route_id) if route_id else None
+
+    fav = Userfavorite.query.filter_by(
+        user_id=user_id,
+        terminal_id=terminal_id,
+        route_id=route_id
+    ).first()
+
+    if not fav:
+        if request.is_json:
+            return jsonify({"error": "Favorite not found"}), 404
+        flash("Favorite not found.", "danger")
+        return redirect(url_for("favorites_page"))
+
+    db.session.delete(fav)
+    
 @app.route('/edit/<string:model>/<int:id>', methods=['GET', 'POST'])
 def update_record(model, id):
     model_class = MODEL_MAP.get(model)
