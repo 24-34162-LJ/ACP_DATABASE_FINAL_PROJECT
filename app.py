@@ -577,6 +577,22 @@ def add_record(model):
                 if session.get("user_id"):
                     item.user_id = session.get("user_id")
 
+            db.session.add(item)
+            db.session.flush()
+
+            # Determine primary key column value for audit logging
+            pk_value = None
+            try:
+                # Use SQLAlchemy table metadata to find primary key column name(s)
+                table = getattr(item.__class__, "__table__", None)
+                if table is not None:
+                    for col in table.columns:
+                        if col.primary_key:
+                            pk_value = getattr(item, col.name, None)
+                            break
+            except Exception:
+                pk_value = None
+                
         # special case for users because of password hashing
         if model == "jeepneys":
             item = Jeepney(
