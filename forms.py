@@ -111,12 +111,12 @@ class UserForm(FlaskForm):
 
     password = PasswordField(
         "Password",
-        validators=[DataRequired(), Length(min=6)]
+        validators=[DataRequired(), Length(min=6, message="Password must be at least 6 characters")]
     )  # to get the password
 
     confirm_password = PasswordField(
         "Confirm Password",
-        validators=[DataRequired(), EqualTo('password')]
+        validators=[DataRequired(), EqualTo('password', message="Passwords must match")]
     )  # to make sure the password is same
 
     role = SelectField(
