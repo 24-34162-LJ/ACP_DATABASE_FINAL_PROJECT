@@ -1426,7 +1426,7 @@ def api_trip_arrive():
         trip.status = "Arrived"
         trip.arrival_time = datetime.utcnow()
         notify_trip_event(trip, "Arrival")
-        
+
     new_record = TerminalJeepneys(
         terminal_id=destination_id,
         jeepney_id=jeepney_id,
@@ -1446,6 +1446,106 @@ def api_trip_arrive():
         "to": destination_id,
         "arrived_passengers": arrived_passengers
     }), 200
+
+# ---------------- API: SEARCH ROUTES ----------------
+@app.route("/api/search/routes")
+def api_search_routes():
+    q = request.args.get("q", "", type=str).strip()
+    if not q:
+        return jsonify([])
+    routes = (
+        Route.query
+        .filter(Route.route_name.ilike(f"%{q}%"))
+        .all()
+    )
+    return jsonify([
+        {
+            "route_id": r.route_id,
+            "route_name": r.route_name,
+            "start_terminal": r.start_terminal.terminal_name,
+            "end_terminal": r.end_terminal.terminal_name,
+        }
+        for r in routes
+    ])
+
+# ---------------- API: FILTER TERMINALS BY LOCATION ----------------
+@app.route("/api/terminals/filter")
+def api_filter_terminals():
+    loc = request.args.get("location", "", type=str).strip()
+    if not loc:
+        return jsonify([])
+    terminals = (
+        Terminal.query
+        .filter(Terminal.location.ilike(f"%{loc}%"))
+        .all()
+    )
+    return jsonify([
+        {
+            "terminal_id": t.terminal_id,
+            "terminal_name": t.terminal_name,
+            "location": t.location,
+            "is_main": t.is_main,
+        }
+        for t in terminals
+    ])
+
+from sqlalchemy.exc import SQLAlchemyError
+
+# --- small helper for JSON error responses (optional but convenient) ---
+def json_error(message, status=400):
+    return jsonify({"error": message}), status
+
+# ---------------- API: DELETE JEEP FROM TERMINAL QUEUE ----------------
+@app.route("/api/terminal/<int:terminal_id>/jeepneys/<int:jeepney_id>", methods=["DELETE"])
+def api_delete_terminal_jeep(terminal_id, jeepney_id):
+    """
+    Delete a jeep from the terminal queue (TerminalJeepneys row) OR delete the Jeepney record.
+    Behavior:
+      - Try to delete the TerminalJeepneys latest row for that terminal+jeep.
+      - If none found, try to delete the Jeepney record itself.
+    """
+    try:
+        # find latest queue row for this terminal+jeep
+        tj = (
+            TerminalJeepneys.query
+            .filter_by(terminal_id=terminal_id, jeepney_id=jeepney_id)
+            .order_by(TerminalJeepneys.arrival_time.desc())
+            .first()
+        )
+
+        if tj:
+            # delete the queue row (remove from this terminal's queue)
+            db.session.delete(tj)
+            create_audit_log(
+                action="DELETE",
+                table_name="terminaljeeps",
+                record_id=getattr(tj, "terminal_jeep_id", None),
+                description=f"Deleted TerminalJeep row for jeep {jeepney_id} at terminal {terminal_id}.",
+                user_id=session.get("user_id")
+            )
+            db.session.commit()
+            return jsonify({"message": "Queue entry removed"}), 200
+
+        # if no TerminalJeepneys row, try delete Jeepney record (dangerous)
+        jeep = Jeepney.query.get(jeepney_id)
+        if not jeep:
+            return json_error("Jeep not found", 404)
+
+        db.session.delete(jeep)
+        create_audit_log(
+            action="DELETE",
+            table_name="jeepneys",
+            record_id=getattr(jeep, "jeepney_id", None),
+            description=f"Deleted Jeepney {jeepney_id}.",
+            user_id=session.get("user_id")
+        )
+        db.session.commit()
+        return jsonify({"message": "Jeep deleted"}), 200
+    
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        current_app.logger.exception("Failed to delete jeep/queue row")
+        return json_error("Failed to delete jeep/queue entry", 500)
 
 # ---------------- MAIN ----------------
 if __name__ == "__main__":
