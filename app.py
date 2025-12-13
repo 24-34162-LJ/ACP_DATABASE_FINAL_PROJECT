@@ -124,6 +124,13 @@ def create_notification(user_id, trip_id, type_nof, message):
         message=message
     )
     db.session.add(notif)
+
+def notify_trip_event(trip, type_nof, custom_message=None):    
+    """
+    Send a notification to users who have this route/origin/destination as favorite.
+    - trip: Trip object
+    - type_nof: 'Arrival' | 'Departure' | 'FullCapacity'
+    """
     
 # ---------------- BASIC PAGES ----------------
 @app.route('/home')
