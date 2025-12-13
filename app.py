@@ -809,6 +809,14 @@ def update_record(model, id):
             # Normal case
             form.populate_obj(obj)
 
+        pk_value = getattr(obj, f"{model[:-1]}_id", id)  # e.g. user_id, terminal_id
+        create_audit_log(
+            action="UPDATE",
+            table_name=model,
+            record_id=pk_value,
+            description=f"Updated {model} record with id={pk_value}."
+        )
+
         db.session.commit()
         flash(f"{model.capitalize()} updated successfully!", "success")
         return redirect(url_for('view'))
