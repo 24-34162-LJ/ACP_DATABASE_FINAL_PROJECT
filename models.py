@@ -314,3 +314,46 @@ class Seat(db.Model):
         foreign_keys=[trip_id],
         back_populates="seats_pk"
     )
+
+# terminal jeepneys
+
+class TerminalJeepneys(db.Model):
+    __tablename__ = "terminaljeeps"
+
+    terminal_jeep_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+
+    terminal_id = db.Column(
+        db.Integer,
+        db.ForeignKey('terminals.terminal_id', ondelete="CASCADE"),
+        nullable=False
+    )
+    
+    jeepney_id = db.Column(
+        db.Integer,
+        db.ForeignKey('jeepneys.jeepney_id', ondelete="CASCADE"),
+        nullable=False
+    )
+
+    arrival_time = db.Column(db.DateTime, nullable=False)
+    departure_time = db.Column(db.DateTime, nullable=True)
+
+    status = db.Column(
+        db.Enum('Waiting', 'Boarding', 'Departed', 'Arrived', name='terminal_jeep_status'),
+        nullable=False,
+        default='Waiting'
+    )
+    current_passengers = db.Column(db.Integer, nullable=False, default=0)
+
+    # to relationship
+
+    terminal_jeep_fk = db.relationship(
+        "Terminal",
+        foreign_keys=[terminal_id],
+        back_populates='terminal_jeep_pk'
+    )
+
+    jeep_jeep_fk = db.relationship(
+        "Jeepney",
+        foreign_keys=[jeepney_id],
+        back_populates='jeep_jeep_pk'
+    )
