@@ -462,3 +462,37 @@ class Notification(db.Model):
         foreign_keys=[trip_id],
         back_populates="notification_trip_pk"
     )
+
+# audt_log
+
+class Auditlog(db.Model):
+
+    __tablename__ = "auditlogs"
+
+    audit_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey('users.user_id', ondelete="CASCADE"),
+        nullable=False
+    )
+
+    table_name = db.Column(db.String(100), nullable=False)
+    record_id = db.Column(db.Integer, nullable=False)
+    action = db.Column(
+        db.Enum('INSERT', 'UPDATE', 'DELETE', name='actions')
+    )
+
+    timestamp = db.Column(
+        db.DateTime,
+        nullable=False,
+        server_default=func.now()
+    )
+    
+    description = db.Column(db.String(255), nullable=True)
+
+    audit_user_fk = db.relationship(
+        "User",
+        foreign_keys=[user_id],
+        back_populates='audit_user_pk'
+    )
