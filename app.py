@@ -661,7 +661,20 @@ def add_favorite():
         label=label
 
     )
-            
+    db.session.add(fav)
+    db.session.flush()
+    
+    create_audit_log(
+        action="INSERT",
+        table_name="userfavorites",
+        record_id=fav.favorite_id,
+        description=f"Added favorite (terminal_id={terminal_id}, route_id={route_id})."
+    )
+    
+    db.session.commit()
+
+    return jsonify({"message": "Added to favorites"}), 201
+
         # special case for users because of password hashing
         if model == "jeepneys":
             item = Jeepney(
