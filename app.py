@@ -113,6 +113,18 @@ def set_form_choices(form, model):
             (t.terminal_id, t.terminal_name) for t in Terminal.query.all()
     ]
 
+def create_notification(user_id, trip_id, type_nof, message):
+    """
+    Low-level helper to insert a notification row.
+    """
+    notif = Notification(
+        user_id=user_id,
+        trip_id=trip_id,
+        type_nof=type_nof,   # 'Arrival', 'Departure', 'FullCapacity', 'System'
+        message=message
+    )
+    db.session.add(notif)
+    
 # ---------------- BASIC PAGES ----------------
 @app.route('/home')
 def home():
