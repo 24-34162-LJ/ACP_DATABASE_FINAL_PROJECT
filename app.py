@@ -724,6 +724,21 @@ def remove_favorite():
 
     db.session.delete(fav)
     
+    create_audit_log(
+        action="DELETE",
+        table_name="userfavorites",
+        record_id=fav.favorite_id,
+        description=f"Removed favorite (terminal_id={fav.terminal_id}, route_id={fav.route_id})."
+    )
+
+    db.session.commit()
+
+    if request.is_json:
+        return jsonify({"message": "Removed from favorites"}), 200
+
+    flash("Removed from favorites.", "info")
+    return redirect(url_for("favorites_page"))
+
 @app.route('/edit/<string:model>/<int:id>', methods=['GET', 'POST'])
 def update_record(model, id):
     model_class = MODEL_MAP.get(model)
