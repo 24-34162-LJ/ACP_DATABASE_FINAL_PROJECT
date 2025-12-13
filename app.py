@@ -592,7 +592,26 @@ def add_record(model):
                             break
             except Exception:
                 pk_value = None
-                
+
+            create_audit_log(
+                action="INSERT",
+                table_name=model,
+                record_id=pk_value,
+                description=f"Added {model} record."
+            )    
+
+            db.session.commit()
+            flash(f"{model.capitalize()} added successfully!", "success")
+            return redirect(url_for("view"))
+
+        except Exception as e:
+            # rollback and log detailed exception for debugging
+            db.session.rollback()
+            current_app.logger.exception("Error adding record for model=%s", model)
+            flash("Error adding record: " + str(e), "danger")
+            # keep the user on the add page so they can correct input
+            return render_template("add.html", form=form, model=model, action="add")
+        
         # special case for users because of password hashing
         if model == "jeepneys":
             item = Jeepney(
