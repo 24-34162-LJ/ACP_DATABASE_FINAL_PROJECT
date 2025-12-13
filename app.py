@@ -442,6 +442,9 @@ def add_record(model):
     ModelClass = MODEL_MAP[model]
     FormClass = FORM_MAP[model]
 
+    if ModelClass is None or FormClass is None:
+        abort(404)
+        
     form = FormClass()
 
     # important: set choices BEFORE validate_on_submit
