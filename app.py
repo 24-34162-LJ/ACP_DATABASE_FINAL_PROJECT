@@ -131,6 +131,23 @@ def notify_trip_event(trip, type_nof, custom_message=None):
     - trip: Trip object
     - type_nof: 'Arrival' | 'Departure' | 'FullCapacity'
     """
+
+    # Which users are "subscribed"?
+    # Rule: any Userfavorite that matches this trip's route OR terminals.
+    favs = (
+        Userfavorite.query
+        .filter(
+            or_(
+                Userfavorite.route_id == trip.route_id,
+                Userfavorite.terminal_id == trip.origin_terminal_id,
+                Userfavorite.terminal_id == trip.destination_terminal_id,
+            )
+        )
+        .all()
+    )
+
+    if not favs:
+        return  # no subscribers; nothing to do
     
 # ---------------- BASIC PAGES ----------------
 @app.route('/home')
