@@ -496,6 +496,86 @@ def add_record(model):
                 db.session.commit()
                 flash("User added successfully!", "success")
                 return redirect(url_for("view"))
+            
+            # ------------------ SPECIAL CASE: JEEPNEYS ------------------
+            if model == "jeepneys":
+                item = Jeepney(
+                    plate_number=form.plate_number.data,
+                    capacity=form.capacity.data,
+                    status="Available"
+                )
+                db.session.add(item)
+                db.session.flush()  # so jeepney_id is available
+
+                # also attach to selected terminal (terminal_id choice filled earlier)
+                tj = TerminalJeepneys(
+                    terminal_id=form.terminal_id.data,
+                    jeepney_id=item.jeepney_id,
+                    arrival_time=datetime.utcnow(),
+                    status="Waiting",
+                    current_passengers=0
+                )
+                db.session.add(tj)
+                db.session.flush()
+
+                create_audit_log(
+                    action="INSERT",
+                    table_name="jeepneys",
+                    record_id=item.jeepney_id,
+                    description=f"Added jeepney {item.plate_number} with capacity {item.capacity}."
+                )
+                create_audit_log(
+                    action="INSERT",
+                    table_name="terminaljeeps",
+                    record_id=tj.terminal_jeep_id,
+                    description=f"Assigned jeepney {item.plate_number} to terminal_id={tj.terminal_id}."
+                )
+
+                db.session.commit()
+                flash("Jeepney added successfully.", "success")
+                return redirect(url_for("view"))
+
+            # ------------------ SPECIAL CASE: USERFAVORITES ------------------
+            if model == "userfavorites":
+                # Prefer the logged-in user
+                fav_user_id = session.get("user_id")
+                terminal_id = form.terminal_id.data or None
+                route_id = form.route_id.data or None
+                label = (form.label.data or "").strip()
+                if not label:
+                    label = f"Fav route {route_id} @ terminal {terminal_id}"
+
+                fav = Userfavorite(
+                    user_id=fav_user_id,
+                    terminal_id=terminal_id,
+                    route_id=route_id,
+                    label=label
+                )
+                db.session.add(fav)
+                db.session.flush()
+
+                create_audit_log(
+                    action="INSERT",
+                    table_name="userfavorites",
+                    record_id=fav.favorite_id,
+                    description=f"Added favorite (terminal_id={fav.terminal_id}, route_id={fav.route_id})."
+                )
+
+                db.session.commit()
+                flash("Favorite added successfully!", "success")
+                # redirect to favorites list for user
+                return redirect(url_for("favorites_page"))
+
+            # ------------------ GENERIC CREATE FOR OTHER MODELS ------------------
+            # Create instance and populate from WTForm (field names must match model attrs)
+            item = ModelClass()
+            form.populate_obj(item)
+
+            # If model requires user assignment and none provided, optionally set it
+            if hasattr(item, "user_id") and not getattr(item, "user_id", None):
+                # Only set if a session user exists
+                if session.get("user_id"):
+                    item.user_id = session.get("user_id")
 
         # special case for users because of password hashing
         if model == "jeepneys":
