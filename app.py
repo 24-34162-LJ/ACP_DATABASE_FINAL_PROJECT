@@ -214,6 +214,15 @@ def create_audit_log(action, table_name, record_id, description=None, user_id=No
 def home():
     return render_template('index.html')
 
+def login_required(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        if "user_id" not in session:
+            flash("Please log in to use this feature.", "warning")
+            return redirect(url_for("login"))
+        return f(*args, **kwargs)
+    return wrapper
+
 @app.route('/view')
 def view():
     data = {
