@@ -386,6 +386,10 @@ def Add():
     if form.validate_on_submit():
         terminal_name = form.terminal_name.data
         location = form.location.data
+        route_name = form.route_name.data
+        est_time = form.estimated_time_minutes.data
+
+        # 1) Create terminal
 
         terminal = Terminal(
             terminal_name=terminal_name,
@@ -393,6 +397,40 @@ def Add():
         )
 
         db.session.add(terminal)
+        db.session.flush()   # so terminal.terminal_id is available
+
+        # 2) Decide start & end terminal for the route
+        main_id = current_app.config["MAIN_TERMINAL_ID"]
+
+        # 3) Fallback default if user left estimated_time empty
+        if est_time is None:
+            est_time = 0   # or 15, or whatever you want as default
+
+        # 4) Create route row
+        route = Route(
+            route_name=route_name,
+            start_terminal_id=main_id,
+            end_terminal_id=terminal.terminal_id,
+            estimated_time_minutes=est_time
+        )
+        db.session.add(route)
+        db.session.flush()
+        
+        create_audit_log(
+            action="INSERT",
+            table_name="terminals",
+            record_id=terminal.terminal_id,
+            description=f"Added terminal '{terminal.terminal_name}' at '{terminal.location}'."
+        )
+        create_audit_log(
+            action="INSERT",
+            table_name="routes",
+            record_id=route.route_id,
+            description=f"Added route '{route.route_name}' from MAIN({main_id}) to terminal {terminal.terminal_id}."
+        )
+
+        # 5) Save everything
+        
         db.session.commit()
         flash("data added in database")
         return redirect(url_for("operator"))
