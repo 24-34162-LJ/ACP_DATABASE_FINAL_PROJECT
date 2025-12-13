@@ -155,6 +155,60 @@ def notify_trip_event(trip, type_nof, custom_message=None):
     origin = Terminal.query.get(trip.origin_terminal_id)
     dest = Terminal.query.get(trip.destination_terminal_id)
 
+    default_msg = ""
+    if type_nof == "Departure":
+        default_msg = (
+            f"Jeep {jeep.plate_number} has departed from "
+            f"{origin.terminal_name} to {dest.terminal_name}."
+        )
+    elif type_nof == "Arrival":
+        default_msg = (
+            f"Jeep {jeep.plate_number} has arrived at "
+            f"{dest.terminal_name} from {origin.terminal_name}."
+        )
+    elif type_nof == "FullCapacity":
+        default_msg = (
+            f"Jeep {jeep.plate_number} on route {origin.terminal_name} → "
+            f"{dest.terminal_name} is now at full capacity."
+        )
+    else:
+        default_msg = "Trip update."
+
+    message = custom_message or default_msg
+
+    for uid in user_ids:
+        create_notification(
+            user_id=uid,
+            trip_id=trip.trip_id,
+            type_nof=type_nof,
+            message=message
+        )
+        
+def create_audit_log(action, table_name, record_id, description=None, user_id=None):
+    """
+    Create a simple audit log entry.
+    - action: 'INSERT', 'UPDATE', or 'DELETE'
+    - table_name: string (e.g. 'users', 'jeepneys')
+    - record_id: primary key of the affected record
+    - description: optional message
+    - user_id: if None, use current logged in user (session['user_id'])
+    """
+    if user_id is None:
+        user_id = session.get("user_id")
+
+    # if no user (e.g. system startup), skip
+    if not user_id:
+        return
+
+    log = Auditlog(
+        user_id=user_id,
+        table_name=table_name,
+        record_id=record_id,
+        action=action,
+        description=description
+    )
+    db.session.add(log)
+
 # ---------------- BASIC PAGES ----------------
 @app.route('/home')
 def home():
