@@ -950,21 +950,40 @@ def auditlogs_page():
     )
 
 # ---------------- MAP + MAIN TERMINAL PAGES ----------------
-from flask import current_app
+#from flask import current_app
 
 @app.route("/map")
 def map_view():
     main_id = current_app.config.get("MAIN_TERMINAL_ID", MAIN_TERMINAL_ID)
 
+    # all non-main terminals (render up to 20)
     terminals = (
         Terminal.query
         .filter(Terminal.terminal_id != main_id)
         .order_by(Terminal.terminal_id.asc())
-        .limit(4)
+        .limit(20)
         .all()
     )
 
-    return render_template("map.html", terminals=terminals, main_terminal_id=main_id)
+    routes = (
+        Route.query
+        .filter_by(start_terminal_id=main_id)
+        .all()
+    )
+
+    routes_by_term = {}
+    for r in routes:
+        routes_by_term[r.end_terminal_id] = {
+            "route_id": r.route_id,
+            "route_name": r.route_name
+        }
+    
+    return render_template(
+        "map.html", 
+        terminals=terminals, 
+        main_terminal_id=main_id
+        routes_by_term=routes_by_term,
+        )
 
 # SEAT SIMULATION PAGE PER TERMINAL
 @app.route("/seat/<int:terminal_id>")
