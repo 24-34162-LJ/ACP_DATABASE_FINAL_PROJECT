@@ -346,6 +346,39 @@ def operator_seat(terminal_id):
         terminal_name=terminal.terminal_name
     )
 
+@app.route("/search", methods=["GET"])
+def search():
+    route_query = request.args.get("route", "", type=str).strip()
+    location_query = request.args.get("location", "", type=str).strip()
+
+    # --- ROUTE SEARCH ---
+    routes = []
+    if route_query:
+        # search by route name (ex: "Lipa", "Tanauan", "Main to Lipa")
+        routes = (
+            Route.query
+            .filter(Route.route_name.ilike(f"%{route_query}%"))
+            .all()
+        )
+
+    # --- TERMINAL FILTER BY LOCATION ---
+    terminals = []
+    if location_query:
+        # ex: "Batangas", "Lipa", "Sto. Tomas"
+        terminals = (
+            Terminal.query
+            .filter(Terminal.location.ilike(f"%{location_query}%"))
+            .all()
+        )
+
+    return render_template(
+        "search.html",
+        route_query=route_query,
+        location_query=location_query,
+        routes=routes,
+        terminals=terminals,
+    )
+
 @app.route("/addterminal", methods=['GET', 'POST'])
 def Add():
     form = AddTerminal()
