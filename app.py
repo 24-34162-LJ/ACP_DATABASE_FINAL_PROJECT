@@ -889,6 +889,23 @@ def notifications_page():
         fav_terminal_ids=fav_terminal_ids
     )
 
+@app.route("/notifications/read/<int:notif_id>", methods=["POST"])
+def mark_notification_read(notif_id):
+    notif = Notification.query.get_or_404(notif_id)
+    notif.is_read = True
+    db.session.commit()
+    return redirect(url_for("notifications_page"))
+
+
+
+@app.route("/notifications/delete/<int:notif_id>", methods=["POST"])
+def delete_notification(notif_id):
+    notif = Notification.query.get_or_404(notif_id)
+    db.session.delete(notif)
+    db.session.commit()
+    return redirect(url_for("notifications_page"))
+
+
 # ---------------- MAP + MAIN TERMINAL PAGES ----------------
 from flask import current_app
 
