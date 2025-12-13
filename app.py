@@ -827,6 +827,68 @@ def update_record(model, id):
 def admin():
     return render_template("admin.html")
 
+app.route("/favorites")
+@login_required
+def favorites_page():
+    user_id = session.get("user_id")
+
+    favs = (
+        Userfavorite.query
+        .filter_by(user_id=user_id)
+        .order_by(Userfavorite.date_created.desc())
+        .all()
+    )
+
+    return render_template("favorites.html", favorites=favs)
+
+@app.route("/notifications-page")
+def notifications_page():
+    user_id = session.get("user_id")
+    if not user_id:
+        flash("Please log in to view notifications.", "warning")
+        return redirect(url_for("login"))
+
+    # 🔹 KUNIN lahat ng favorite TERMINALS ng user
+    fav_terminals = (
+        Userfavorite.query
+        .filter_by(user_id=user_id)
+        .filter(Userfavorite.terminal_id.isnot(None))
+        .all()
+    )
+    fav_terminal_ids = {f.terminal_id for f in fav_terminals}
+
+    # Kung wala siyang favorite terminal, wala tayong ipapakitang notif
+    if not fav_terminal_ids:
+        notifications = []
+        return render_template(
+            "notifications.html",
+            notifications=notifications,
+            fav_terminal_ids=fav_terminal_ids
+        )
+
+    # 🔹 KUNIN notifications na:
+    # - para sa current user, AT
+    # - ang trip nila may origin o destination na pasok sa favorite terminals
+    notifications = (
+        db.session.query(Notification)
+        .join(Trip, Notification.trip_id == Trip.trip_id)
+        .filter(Notification.user_id == user_id)
+        .filter(
+            or_(
+                Trip.origin_terminal_id.in_(fav_terminal_ids),
+                Trip.destination_terminal_id.in_(fav_terminal_ids),
+            )
+        )
+        .order_by(Notification.date_sent.desc())
+        .all()
+    )
+
+    return render_template(
+        "notifications.html",
+        notifications=notifications,
+        fav_terminal_ids=fav_terminal_ids
+    )
+
 # ---------------- MAP + MAIN TERMINAL PAGES ----------------
 from flask import current_app
 
