@@ -1425,7 +1425,8 @@ def api_trip_arrive():
     if trip:
         trip.status = "Arrived"
         trip.arrival_time = datetime.utcnow()
-
+        notify_trip_event(trip, "Arrival")
+        
     new_record = TerminalJeepneys(
         terminal_id=destination_id,
         jeepney_id=jeepney_id,
