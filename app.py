@@ -456,6 +456,47 @@ def add_record(model):
         print("ADD FORM ERRORS:", form.errors)
 
     if form.validate_on_submit():
+        try:    
+            # ------------------ SPECIAL CASE: USERS (CREATE) ------------------
+            if model == "users":
+                # When creating a new user, require a password and hash it.
+                pw = (form.password.data or "").strip()
+                if not pw:
+                    form.password.errors.append("Password is required for new users.")
+                    return render_template("add.html", form=form, model=model, action="add")
+
+                # check email uniqueness
+                email_val = (form.email.data or "").strip().lower()
+                if User.query.filter_by(email=email_val).first():
+                    form.email.errors.append("Email already registered.")
+                    return render_template("add.html", form=form, model=model, action="add")
+
+                hashed_pw = generate_password_hash(pw)
+
+                user = User(
+                    first_name=form.first_name.data.strip(),
+                    last_name=form.last_name.data.strip(),
+                    email=email_val,
+                    password_hash=hashed_pw,
+                    role=form.role.data,
+                    level=form.level.data,
+                    xp_points=form.xp_points.data
+                )
+
+                db.session.add(user)
+                db.session.flush()
+
+                create_audit_log(
+                    action="INSERT",
+                    table_name="users",
+                    record_id=user.user_id,
+                    description=f"Added user {user.email}"
+                )
+
+                db.session.commit()
+                flash("User added successfully!", "success")
+                return redirect(url_for("view"))
+
         # special case for users because of password hashing
         if model == "jeepneys":
             item = Jeepney(
