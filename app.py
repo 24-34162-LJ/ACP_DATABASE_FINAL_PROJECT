@@ -675,31 +675,6 @@ def add_favorite():
 
     return jsonify({"message": "Added to favorites"}), 201
 
-        # special case for users because of password hashing
-        if model == "jeepneys":
-            item = Jeepney(
-                plate_number=form.plate_number.data,
-                capacity=form.capacity.data,
-                status="Available"
-            )
-            db.session.add(item)
-            db.session.flush()  # get jeepney_id
-
-            # also attach to selected terminal
-            tj = TerminalJeepneys(
-                terminal_id=form.terminal_id.data,
-                jeepney_id=item.jeepney_id,
-                arrival_time=datetime.utcnow(),
-                status="Waiting",
-                current_passengers=0
-            )
-            db.session.add(tj)
-
-            db.session.commit()
-            return redirect(url_for("view"))
-
-    return render_template("add.html", form=form, model=model, action="add")
- 
 @app.route('/delete/<string:model>/<int:id>', methods=['POST'])
 def delete_record(model, id):
     model_class = MODEL_MAP.get(model)
@@ -707,6 +682,13 @@ def delete_record(model, id):
         abort(404)
 
     obj = model_class.query.get_or_404(id)
+    create_audit_log(
+        action="DELETE",
+        table_name=model,
+        record_id=id,
+        description=f"Deleted {model} record with id={id}."
+    )
+    
     db.session.delete(obj)
     db.session.commit()
     flash(f'{model.capitalize()} record deleted successfully', "success")
