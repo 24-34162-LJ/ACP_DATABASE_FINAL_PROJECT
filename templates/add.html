@@ -142,6 +142,112 @@ input:focus, select:focus, textarea:focus {
 
 </style>
 
+        {# ===================== USERS ===================== #}
+        {% if model == "users" %}
+            <div class="field">
+                <label class="field-label" for="{{ form.first_name.id }}">First name</label>
+                {{ form.first_name(class="") }}
+                {% if form.first_name.errors %}<div class="field-error">{{ form.first_name.errors[0] }}</div>{% endif %}
+            </div>
+
+            <div class="field">
+                <label class="field-label" for="{{ form.last_name.id }}">Last name</label>
+                {{ form.last_name(class="") }}
+                {% if form.last_name.errors %}<div class="field-error">{{ form.last_name.errors[0] }}</div>{% endif %}
+            </div>
+
+            <div class="field">
+                <label class="field-label" for="{{ form.email.id }}">Email</label>
+                {{ form.email(class="") }}
+                {% if form.email.errors %}<div class="field-error">{{ form.email.errors[0] }}</div>{% endif %}
+            </div>
+
+            <div class="field">
+                <label class="field-label" for="{{ form.role.id }}">Role</label>
+                {{ form.role(class="") }}
+                {% if form.role.errors %}<div class="field-error">{{ form.role.errors[0] }}</div>{% endif %}
+            </div>
+
+            <div class="field">
+                <label class="field-label" for="{{ form.password.id }}">Password</label>
+                {{ form.password(class="") }}
+                {% if action == "edit" %}<div class="help-text">Leave blank to keep current password.</div>{% endif %}
+                {% if form.password.errors %}<div class="field-error">{{ form.password.errors[0] }}</div>{% endif %}
+            </div>
+
+            <div class="field">
+                <label class="field-label" for="{{ form.confirm_password.id }}">Confirm password</label>
+                {{ form.confirm_password(class="") }}
+                {% if form.confirm_password.errors %}<div class="field-error">{{ form.confirm_password.errors[0] }}</div>{% endif %}
+            </div>
+
+            <div class="field">
+                <label class="field-label" for="{{ form.level.id }}">Level</label>
+                {{ form.level(class="") }}
+            </div>
+
+            <div class="field">
+                <label class="field-label" for="{{ form.xp_points.id }}">XP points</label>
+                {{ form.xp_points(class="") }}
+            </div>
+        {% endif %}
+
+        {# ===================== TERMINALS ===================== #}
+        {% if model == "terminals" %}
+            <div class="field">
+                <label class="field-label" for="{{ form.terminal_name.id }}">Terminal name</label>
+                {{ form.terminal_name(class="") }}
+                {% if form.terminal_name.errors %}<div class="field-error">{{ form.terminal_name.errors[0] }}</div>{% endif %}
+            </div>
+
+            <div class="field">
+                <label class="field-label" for="{{ form.location.id }}">Location</label>
+                {{ form.location(class="") }}
+                {% if form.location.errors %}<div class="field-error">{{ form.location.errors[0] }}</div>{% endif %}
+            </div>
+
+            <div class="field">
+                <label class="field-label" for="{{ form.status.id }}">Status</label>
+                {{ form.status(class="") }}
+            </div>
+
+            <div class="field">
+                <label class="field-label" for="{{ form.is_main.id }}">Is main terminal?</label>
+                {{ form.is_main(class="") }}
+            </div>
+        {% endif %}
+
+        {# ===================== ROUTES ===================== #}
+        {% if model == "routes" %}
+            <div class="field">
+                <label class="field-label" for="{{ form.route_name.id }}">Route name</label>
+                {{ form.route_name(class="") }}
+            </div>
+
+            <div class="field">
+                <label class="field-label" for="{{ form.start_terminal_id.id }}">Start terminal</label>
+                {{ form.start_terminal_id(class="") }}
+            </div>
+
+            <div class="field">
+                <label class="field-label" for="{{ form.end_terminal_id.id }}">End terminal</label>
+                {{ form.end_terminal_id(class="") }}
+            </div>
+
+            <div class="field">
+                <label class="field-label" for="{{ form.estimated_time_minutes.id }}">Estimated time (minutes)</label>
+                {{ form.estimated_time_minutes(class="") }}
+            </div>
+        {% endif %}
+
+        {# ===================== JEEPNEYS ===================== #}
+        {% if model == "jeepneys" %}
+            <div class="field">
+                <label class="field-label" for="{{ form.plate_number.id }}">Plate number</label>
+                {{ form.plate_number(class="") }}
+            </div>
+            
+
 <form method="post">
     {{ form.hidden_tag() }}
 
