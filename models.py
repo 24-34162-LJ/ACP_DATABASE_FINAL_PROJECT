@@ -4,7 +4,9 @@ from sqlalchemy.sql import func
 from sqlalchemy import text
 from flask_login import UserMixin
 
+
 db = SQLAlchemy()
+
 
 class User(db.Model,  UserMixin):
     __tablename__ = "users"
@@ -58,7 +60,8 @@ class User(db.Model,  UserMixin):
 
     def __repr__(self):
         return f"<User {self.first_name} {self.last_name}>"
-    
+
+
 class Terminal(db.Model):
 
     __tablename__ = "terminals"
@@ -119,7 +122,8 @@ class Terminal(db.Model):
 
     def __repr__(self):
         return f"<terminal {self.terminal_name}>"
-    
+
+
 class Route(db.Model):
 
     __tablename__ = "routes"
@@ -132,13 +136,11 @@ class Route(db.Model):
         db.ForeignKey('terminals.terminal_id'),
         nullable=False
     )
-
     end_terminal_id = db.Column(
         db.Integer,
         db.ForeignKey('terminals.terminal_id'),
         nullable=False
     )
-
     estimated_time_minutes = db.Column(
         db.Integer,
         nullable=False
@@ -173,6 +175,7 @@ class Route(db.Model):
         passive_deletes=True
     )
 
+
 # jeepneys
 
 class Jeepney(db.Model):
@@ -202,6 +205,7 @@ class Jeepney(db.Model):
         cascade="all, delete-orphan",
         passive_deletes=True
     )
+
 
 class Trip(db.Model):
     __tablename__ = "trips"
@@ -284,6 +288,7 @@ class Trip(db.Model):
         passive_deletes=True
     )
 
+
 # trip seats
 
 class Seat(db.Model):
@@ -315,6 +320,7 @@ class Seat(db.Model):
         back_populates="seats_pk"
     )
 
+
 # terminal jeepneys
 
 class TerminalJeepneys(db.Model):
@@ -327,7 +333,6 @@ class TerminalJeepneys(db.Model):
         db.ForeignKey('terminals.terminal_id', ondelete="CASCADE"),
         nullable=False
     )
-     
     jeepney_id = db.Column(
         db.Integer,
         db.ForeignKey('jeepneys.jeepney_id', ondelete="CASCADE"),
@@ -357,6 +362,7 @@ class TerminalJeepneys(db.Model):
         foreign_keys=[jeepney_id],
         back_populates='jeep_jeep_pk'
     )
+
 
 # user_favorites
 
@@ -412,6 +418,7 @@ class Userfavorite(db.Model):
         back_populates='favorite_route_pk'
     )
 
+
 # notifications
 
 class Notification(db.Model):
@@ -463,6 +470,7 @@ class Notification(db.Model):
         back_populates="notification_trip_pk"
     )
 
+
 # audt_log
 
 class Auditlog(db.Model):
@@ -482,13 +490,11 @@ class Auditlog(db.Model):
     action = db.Column(
         db.Enum('INSERT', 'UPDATE', 'DELETE', name='actions')
     )
-
     timestamp = db.Column(
         db.DateTime,
         nullable=False,
         server_default=func.now()
     )
-    
     description = db.Column(db.String(255), nullable=True)
 
     audit_user_fk = db.relationship(
