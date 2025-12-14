@@ -13,14 +13,16 @@ from forms import (
 )
 
 from datetime import datetime
-from sqlalchemy import func, or_, and_ 
+from sqlalchemy import func, or_, and_  
 from functools import wraps
 import os
 
 # ---------------- GLOBAL CONSTANTS ----------------
 MAIN_TERMINAL_ID = 1
 
+
 # ---------------- FLASK APP SETUP ----------------
+
 app = Flask(__name__, instance_relative_config=True)
 os.makedirs(app.instance_path, exist_ok=True)
 
@@ -112,7 +114,7 @@ def set_form_choices(form, model):
         form.terminal_id.choices = [
             (t.terminal_id, t.terminal_name) for t in Terminal.query.all()
     ]
-
+        
 def create_notification(user_id, trip_id, type_nof, message):
     """
     Low-level helper to insert a notification row.
@@ -125,7 +127,8 @@ def create_notification(user_id, trip_id, type_nof, message):
     )
     db.session.add(notif)
 
-def notify_trip_event(trip, type_nof, custom_message=None):    
+
+def notify_trip_event(trip, type_nof, custom_message=None):
     """
     Send a notification to users who have this route/origin/destination as favorite.
     - trip: Trip object
@@ -148,7 +151,7 @@ def notify_trip_event(trip, type_nof, custom_message=None):
 
     if not favs:
         return  # no subscribers; nothing to do
-    
+
     user_ids = {f.user_id for f in favs}
 
     jeep = Jeepney.query.get(trip.jeepney_id)
@@ -212,7 +215,7 @@ def create_audit_log(action, table_name, record_id, description=None, user_id=No
 # ---------------- BASIC PAGES ----------------
 @app.route('/home')
 def home():
-    return render_template('index.html')
+    return render_template("index.html")
 
 def login_required(f):
     @wraps(f)
@@ -223,21 +226,23 @@ def login_required(f):
         return f(*args, **kwargs)
     return wrapper
 
+
 @app.route('/view')
 def view():
     data = {
-       "users": User.query.all(),
-       "terminals": Terminal.query.all(),
-       "jeepneys": Jeepney.query.all(),
-       "terminal_queue": TerminalJeepneys.query.all(),
-       "trips": Trip.query.all(),
-       "seats": Seat.query.all(),
-       "routes": Route.query.all(),
-       "favorites": Userfavorite.query.all(),
-       "notifications": Notification.query.all(),
-       "auditlogs": Auditlog.query.all(),
-   }
+        "users": User.query.all(),
+        "terminals": Terminal.query.all(),
+        "jeepneys": Jeepney.query.all(),
+        "terminal_queue": TerminalJeepneys.query.all(),
+        "trips": Trip.query.all(),
+        "seats": Seat.query.all(),
+        "routes": Route.query.all(),
+        "favorites": Userfavorite.query.all(),
+        "notifications": Notification.query.all(),
+        "auditlogs": Auditlog.query.all(),
+    }
     return render_template("view_database.html", data=data)
+
 
 # ---------------- AUTH ----------------
 @app.route('/login', methods=['POST', 'GET'])
@@ -278,6 +283,7 @@ def login():
 
     return render_template("login.html", form=form)
 
+
 @app.route('/sign', methods=['GET', 'POST'])
 def sign():
     form = RegisterForm()
@@ -312,11 +318,13 @@ def sign():
 
     return render_template("sign.html", form=form)
 
+
 @app.route('/logout')
 def logout():
     session.clear()
     flash("You have been logged out.", "info")
     return redirect(url_for('index'))
+
 
 @app.route("/")
 def index():
@@ -327,6 +335,7 @@ def index():
 def commuter():
     return render_template("commuter.html")
 
+
 @app.route("/operator")
 def operator():
     main_id = current_app.config["MAIN_TERMINAL_ID"]
@@ -335,7 +344,7 @@ def operator():
         "operator.html",
         terminals=terminals,
         main_terminal_id=main_id
-        ) 
+        )
 
 @app.route("/operator/seat/<int:terminal_id>")
 def operator_seat(terminal_id):
@@ -390,12 +399,10 @@ def Add():
         est_time = form.estimated_time_minutes.data
 
         # 1) Create terminal
-
         terminal = Terminal(
             terminal_name=terminal_name,
             location=location
         )
-
         db.session.add(terminal)
         db.session.flush()   # so terminal.terminal_id is available
 
@@ -430,17 +437,18 @@ def Add():
         )
 
         # 5) Save everything
-
         db.session.commit()
+
         flash("Terminal and route added to database", "success")
         return redirect(url_for("operator"))
+
     return render_template("terminal.html", form=form)
 
 @app.route("/add/<model>", methods=["GET", "POST"])
 def add_record(model):
     model = model.lower()
-    ModelClass = MODEL_MAP[model]
-    FormClass = FORM_MAP[model]
+    ModelClass = MODEL_MAP.get(model)
+    FormClass = FORM_MAP.get(model)
 
     if ModelClass is None or FormClass is None:
         abort(404)
@@ -456,7 +464,7 @@ def add_record(model):
         print("ADD FORM ERRORS:", form.errors)
 
     if form.validate_on_submit():
-        try:    
+        try:
             # ------------------ SPECIAL CASE: USERS (CREATE) ------------------
             if model == "users":
                 # When creating a new user, require a password and hash it.
@@ -496,7 +504,7 @@ def add_record(model):
                 db.session.commit()
                 flash("User added successfully!", "success")
                 return redirect(url_for("view"))
-            
+
             # ------------------ SPECIAL CASE: JEEPNEYS ------------------
             if model == "jeepneys":
                 item = Jeepney(
@@ -598,7 +606,7 @@ def add_record(model):
                 table_name=model,
                 record_id=pk_value,
                 description=f"Added {model} record."
-            )    
+            )
 
             db.session.commit()
             flash(f"{model.capitalize()} added successfully!", "success")
@@ -611,11 +619,11 @@ def add_record(model):
             flash("Error adding record: " + str(e), "danger")
             # keep the user on the add page so they can correct input
             return render_template("add.html", form=form, model=model, action="add")
-        
-        # If GET or validation failed, show the add form
-        return render_template("add.html", form=form, model=model, action="add")
-    
-    @app.route("/favorites/add", methods=["POST"])
+
+    # If GET or validation failed, show the add form
+    return render_template("add.html", form=form, model=model, action="add")
+
+@app.route("/favorites/add", methods=["POST"])
 def add_favorite():
     """
     Add a favorite terminal or route for the current user.
@@ -625,8 +633,8 @@ def add_favorite():
       - label (optional)
     At least one of terminal_id or route_id must be present.
     """
-    user_id = session.get("user_id")  
-    
+    user_id = session.get("user_id")
+
     # support both JSON and normal form without errors
     data = request.get_json(silent=True) or request.form
 
@@ -639,7 +647,7 @@ def add_favorite():
 
     if not terminal_id and not route_id:
         return jsonify({"error": "terminal_id or route_id is required"}), 400
-    
+
     # avoid duplicate favorites per user / terminal / route
     existing = Userfavorite.query.filter_by(
         user_id=user_id,
@@ -658,8 +666,7 @@ def add_favorite():
         user_id=user_id,
         terminal_id=terminal_id,
         route_id=route_id,
-        label=label
-
+        label=label  # important: satisfies NOT NULL
     )
     db.session.add(fav)
     db.session.flush()
@@ -670,7 +677,7 @@ def add_favorite():
         record_id=fav.favorite_id,
         description=f"Added favorite (terminal_id={terminal_id}, route_id={route_id})."
     )
-    
+
     db.session.commit()
 
     return jsonify({"message": "Added to favorites"}), 201
@@ -682,13 +689,14 @@ def delete_record(model, id):
         abort(404)
 
     obj = model_class.query.get_or_404(id)
+    
     create_audit_log(
         action="DELETE",
         table_name=model,
         record_id=id,
         description=f"Deleted {model} record with id={id}."
     )
-    
+
     db.session.delete(obj)
     db.session.commit()
     flash(f'{model.capitalize()} record deleted successfully', "success")
@@ -730,7 +738,7 @@ def remove_favorite():
         record_id=fav.favorite_id,
         description=f"Removed favorite (terminal_id={fav.terminal_id}, route_id={fav.route_id})."
     )
-
+    
     db.session.commit()
 
     if request.is_json:
@@ -738,6 +746,7 @@ def remove_favorite():
 
     flash("Removed from favorites.", "info")
     return redirect(url_for("favorites_page"))
+
 
 @app.route('/edit/<string:model>/<int:id>', methods=['GET', 'POST'])
 def update_record(model, id):
@@ -808,7 +817,7 @@ def update_record(model, id):
         else:
             # Normal case
             form.populate_obj(obj)
-
+        
         pk_value = getattr(obj, f"{model[:-1]}_id", id)  # e.g. user_id, terminal_id
         create_audit_log(
             action="UPDATE",
@@ -823,11 +832,28 @@ def update_record(model, id):
 
     return render_template("add.html", form=form, model=model, action="edit")
 
+@app.route("/favorites/update/<int:favorite_id>", methods=["POST"])
+@login_required
+def update_favorite_label(favorite_id):
+    """Update the label (note) of an existing favorite."""
+    user_id = session.get("user_id")
+    fav = Userfavorite.query.filter_by(
+        favorite_id=favorite_id,
+        user_id=user_id
+    ).first_or_404()
+
+    label = (request.form.get("label") or "").strip()
+    fav.label = label  # ok even if empty string
+    db.session.commit()
+
+    flash("Favorite label updated.", "success")
+    return redirect(url_for("favorites_page"))
+
 @app.route("/admin")
 def admin():
     return render_template("admin.html")
 
-app.route("/favorites")
+@app.route("/favorites")
 @login_required
 def favorites_page():
     user_id = session.get("user_id")
@@ -888,7 +914,7 @@ def notifications_page():
         notifications=notifications,
         fav_terminal_ids=fav_terminal_ids
     )
-
+    
 @app.route("/notifications/read/<int:notif_id>", methods=["POST"])
 def mark_notification_read(notif_id):
     notif = Notification.query.get_or_404(notif_id)
@@ -904,6 +930,7 @@ def delete_notification(notif_id):
     db.session.delete(notif)
     db.session.commit()
     return redirect(url_for("notifications_page"))
+
 
 @app.route("/auditlogs")   # only admin can view logs
 def auditlogs_page():
@@ -977,13 +1004,12 @@ def map_view():
             "route_id": r.route_id,
             "route_name": r.route_name
         }
-    
+
     return render_template(
-        "map.html", 
-        terminals=terminals, 
-        main_terminal_id=main_id
+        "map.html",
+        terminals=terminals,
+        main_terminal_id=main_id,
         routes_by_term=routes_by_term,
-    
     )
 
 # SEAT SIMULATION PAGE PER TERMINAL
@@ -1001,6 +1027,7 @@ def seat(terminal_id):
         terminal_name=terminal.terminal_name,
         main_terminal_id=main_id
     )
+
 
 @app.route("/mainterminal")
 def mainterminal():
@@ -1021,6 +1048,7 @@ def main_destination():
         terminals=terminals,
         main_terminal_id=MAIN_TERMINAL_ID
     )
+
 
 # ---------------- API: QUEUE DATA FOR A TERMINAL ----------------
 @app.route("/api/terminal/<int:terminal_id>/queue")
@@ -1065,7 +1093,10 @@ def api_terminal_queue(terminal_id):
 
     return jsonify(data)
 
- # ---------------- API: WHEN JEEP DEPARTS FROM MAIN TERMINAL ----------------
+
+
+
+# ---------------- API: WHEN JEEP DEPARTS FROM MAIN TERMINAL ----------------
 @app.route("/api/trips/depart-from-main", methods=["POST"])
 def api_trip_depart_from_main():
     """
@@ -1138,13 +1169,16 @@ def api_trip_depart_from_main():
     db.session.add(seat)
 
     jeep.status = "En Route"
+    
     notify_trip_event(trip, "Departure")
     if passengers >= capacity:
         notify_trip_event(trip, "FullCapacity")
-
+        
     db.session.commit()
 
     return jsonify({"trip_id": trip.trip_id}), 201
+
+
 # ---------------- API: ADD JEEP TO TERMINAL ----------------
 @app.route("/api/terminal/<int:terminal_id>/jeepneys", methods=["POST"])
 def api_add_jeep_to_terminal(terminal_id):
@@ -1187,6 +1221,7 @@ def api_add_jeep_to_terminal(terminal_id):
         "terminal_id": terminal_id
     }), 201
 
+
 # ---------------- API: LIST TERMINALS ----------------
 @app.route("/api/terminals")
 def api_terminals():
@@ -1199,6 +1234,7 @@ def api_terminals():
         }
         for t in terminals
     ])
+
 
 # ---------------- API: UPDATE PASSENGERS IN TERMINAL QUEUE ----------------
 @app.route("/api/terminal/<int:terminal_id>/jeepneys/<int:jeepney_id>/passengers", methods=["PATCH"])
@@ -1224,6 +1260,50 @@ def api_update_terminal_jeep_passengers(terminal_id, jeepney_id):
 
     return jsonify({"ok": True, "current_passengers": tj.current_passengers})
 
+
+# ---------------- API: MAIN ORIGIN JEEPS (FOR MAINTERMINAL UI) ----------------
+@app.route("/api/main/origin-jeeps")
+def api_main_origin_jeeps():
+    """
+    List the latest jeep currently traveling TO the MAIN TERMINAL
+    (one per origin terminal).
+    """
+
+    main_id = current_app.config.get("MAIN_TERMINAL_ID", MAIN_TERMINAL_ID)
+
+    # Get all live trips heading to MAIN
+    trips = (
+        Trip.query
+        .filter_by(status="En Route", destination_terminal_id=main_id)
+        .order_by(Trip.departure_time.desc())
+        .all()
+    )
+
+    latest = {}
+    for t in trips:
+        if t.origin_terminal_id not in latest:
+            latest[t.origin_terminal_id] = t  # first is the newest
+
+    result = []
+
+    for origin_id, trip in latest.items():
+        jeep = Jeepney.query.get(trip.jeepney_id)
+        term = Terminal.query.get(origin_id)
+        seat = Seat.query.filter_by(trip_id=trip.trip_id).first()
+
+        result.append({
+            "jeepney_id": jeep.jeepney_id,
+            "plate_number": jeep.plate_number,
+            "terminal_id": term.terminal_id,
+            "terminal_name": term.terminal_name,
+            "capacity": jeep.capacity,
+            "passengers": seat.occupied_seats if seat else 0
+        })
+
+    return jsonify(result)
+
+
+# ---------------- API: LIVE TRIPS FOR MAP ANIMATION ----------------
 # ---------------- API: LIVE TRIPS FOR MAP ANIMATION ----------------
 @app.route("/api/map/live-trips")
 def api_map_live_trips():
@@ -1264,10 +1344,9 @@ def api_map_live_trips():
     # quick debug if you want:
     # print("LIVE TRIPS:", result)
 
-    return jsonify(result)                  
-    
-# ---------------- API: LIVE TRIPS FOR MAP ANIMATION ----------------
-app.route("/api/favorites", methods=["POST"])
+    return jsonify(result)
+
+@app.route("/api/favorites", methods=["POST"])
 def api_add_favorite():
     data = request.get_json() or {}
 
@@ -1299,6 +1378,7 @@ def api_add_favorite():
         "label": fav.label,
     }), 201
 
+
 @app.route("/api/map/completed-trips")
 def api_map_completed_trips():
     trips = Trip.query.filter(Trip.status.in_(["Arrived", "Completed"])).all()
@@ -1311,7 +1391,7 @@ def api_map_completed_trips():
         }
         for t in trips
     ])
-
+    
 # ---------------- API: WHEN JEEP DEPARTS FROM AN ORIGIN TERMINAL ----------------
 @app.route("/api/trips/depart", methods=["POST"])
 def api_trip_depart():
@@ -1384,6 +1464,8 @@ def api_trip_depart():
     db.session.commit()
 
     return jsonify({"trip_id": trip.trip_id}), 201
+
+
 
 @app.route("/api/trips/arrive", methods=["POST"])
 def api_trip_arrive():
@@ -1488,7 +1570,7 @@ def api_filter_terminals():
         }
         for t in terminals
     ])
-
+    
 from sqlalchemy.exc import SQLAlchemyError
 
 # --- small helper for JSON error responses (optional but convenient) ---
@@ -1541,7 +1623,7 @@ def api_delete_terminal_jeep(terminal_id, jeepney_id):
         )
         db.session.commit()
         return jsonify({"message": "Jeep deleted"}), 200
-    
+
     except SQLAlchemyError as e:
         db.session.rollback()
         current_app.logger.exception("Failed to delete jeep/queue row")
@@ -1551,6 +1633,7 @@ def api_delete_terminal_jeep(terminal_id, jeepney_id):
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()
+        
         
                # Sample users
         if not User.query.filter_by(email='admin@gmail.com').first():
@@ -1586,3 +1669,4 @@ if __name__ == "__main__":
         app.config["MAIN_TERMINAL_ID"] = main.terminal_id
 
     app.run(debug=True)
+
