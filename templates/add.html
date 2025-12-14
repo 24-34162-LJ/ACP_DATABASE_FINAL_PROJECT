@@ -442,7 +442,7 @@ input:focus, select:focus, textarea:focus {
 
         <!-- SAVE BUTTON -->
         <button class="save-btn" type="submit">
-            {{ action|capitalize }}
+            💾 {{ action|capitalize }}
         </button>
 
         <!-- CANCEL BUTTON -->
@@ -450,8 +450,39 @@ input:focus, select:focus, textarea:focus {
             ✖ Cancel
         </a>
 
-    </div>
+      </div>
 
-</form>
+    </form>
+  </div>
+</div>
+
+<script>
+  // autofocus first visible input
+  document.addEventListener('DOMContentLoaded', ()=>{
+    const first = document.querySelector('.form-card input, .form-card select, .form-card textarea');
+    if(first) first.focus();
+
+    // small models that should use compact layout
+    const smallModels = ["userfavorites", "notifications", "auditlogs"];
+    const modelName = "{{ model|lower }}";
+    const formGrid = document.getElementById('form-grid');
+    const formCard = document.getElementById('form-card');
+
+    // Option 1: if model is in the smallModels list -> compact
+    if (smallModels.indexOf(modelName) !== -1) {
+      formGrid.classList.add('compact');
+      formCard.classList.add('compact');
+    } else {
+      // Option 2: fallback: auto-detect by counting number of visible fields
+      // If there are <= 4 input/select/textarea visible -> compact
+      const inputs = Array.from(document.querySelectorAll('#form-grid input, #form-grid select, #form-grid textarea'))
+                          .filter(el => el.offsetParent !== null); // visible
+      if (inputs.length <= 4) {
+        formGrid.classList.add('compact');
+        formCard.classList.add('compact');
+      }
+    }
+  });
+</script>
 
 {% endblock %}
