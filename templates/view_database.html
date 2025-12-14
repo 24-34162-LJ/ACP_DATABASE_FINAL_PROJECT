@@ -1,156 +1,20 @@
 {% extends "base.html" %}
 {% block title %}Database Content{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='databases/view_database.css') }}">
+{% endblock %}
+
 {% block content %}
-
-<style>
-    .db-layout {
-        display: grid;
-        grid-template-columns: 220px 1fr;
-        gap: 20px;
-        align-items: flex-start;
-    }
-
-    .db-sidebar {
-        position: sticky;
-        top: 80px;
-        background: #ffffff;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        padding: 12px 14px;
-        font-size: 14px;
-    }
-
-    .db-sidebar h3 {
-        margin-top: 0;
-        font-size: 16px;
-        margin-bottom: 8px;
-    }
-
-    .db-sidebar ul {
-        list-style: none;
-        padding-left: 0;
-        margin: 0;
-    }
-
-    .db-sidebar li {
-        margin-bottom: 4px;
-    }
-
-    .db-sidebar a {
-        text-decoration: none;
-        color: #007bff;
-    }
-
-    .db-sidebar a:hover {
-        text-decoration: underline;
-    }
-
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-bottom: 35px;
-        background: white;
-        font-size: 13px;
-    }
-
-    th, td {
-        border: 1px solid #ccc;
-        padding: 6px 10px;
-    }
-
-    th {
-        background: #333;
-        color: white;
-    }
-
-    .section-title {
-        margin-top: 40px;
-        margin-bottom: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 10px;
-    }
-
-    .actions {
-        white-space: nowrap;
-    }
-
-    .actions a,
-    .actions form {
-        display: inline-block;
-        margin: 0 3px;
-    }
-
-    .actions button {
-        font-size: 11px;
-        padding: 3px 8px;
-        border-radius: 4px;
-        border: none;
-        cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-    }
-
-    .actions .btn-edit {
-        background: #17a2b8;
-        color: #fff;
-    }
-
-    .actions .btn-edit:hover {
-        background: #138496;
-    }
-
-    .actions .btn-delete {
-        background: #dc3545;
-        color: #fff;
-    }
-
-    .actions .btn-delete:hover {
-        background: #c82333;
-    }
-
-    .db-header {
-        margin-bottom: 15px;
-    }
-
-    .db-header h1 {
-        margin-bottom: 4px;
-    }
-
-    .db-header p {
-        margin: 0;
-        font-size: 14px;
-        color: #555;
-    }
-
-    .btn-add {
-        padding: 4px 10px;
-        font-size: 11px;
-        border-radius: 4px;
-        border: none;
-        cursor: pointer;
-        background: #28a745;
-        color: #fff;
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-    }
-
-    .btn-add:hover {
-        background: #218838;
-    }
-</style>
 
 <div class="db-header">
     <h1>📊 Complete Database Viewer</h1>
-    <p>View, update, or delete records from your entire database.</p>
+    <p>View, update, or delete records from your database. Use the sidebar to jump between tables.</p>
 </div>
 
 <div class="db-layout">
     <!-- LEFT: QUICK NAV -->
-    <aside class="db-sidebar">
+    <aside class="db-sidebar" aria-label="Database navigation">
         <h3>Tables</h3>
         <ul>
             <li><a href="#users">Users</a></li>
@@ -169,59 +33,63 @@
     <!-- RIGHT: TABLES -->
     <div>
         {% macro render_table(title, items, model_name, id_attr, anchor_id) %}
-        <h2 class="section-title" id="{{ anchor_id }}">
-            <span>{{ title }}</span>
+        <div class="table-card" id="{{ anchor_id }}-card">
+            <div class="section-title" id="{{ anchor_id }}">
+                <div class="left">
+                    <div class="title-text">{{ title }}</div>
+                    <div class="muted" style="font-size:0.9rem; color:#6b7280;">
+                        &nbsp;·&nbsp;{{ items|length }} record{{ 's' if items|length != 1 }}
+                    </div>
+                </div>
 
-            <!-- ADD NEW BUTTON -->
-            <a href="{{ url_for('add_record', model=model_name) }}">
-                <button type="button" class="btn-add">
-                    ➕ Add New
-                </button>
-            </a>
-        </h2>
+                <div class="section-controls">
+                    <input class="table-search" placeholder="Search {{ title }}..." oninput="filterTable('{{ anchor_id }}', this.value)">
+                    <a href="{{ url_for('add_record', model=model_name) }}">
+                        <button type="button" class="btn-add">➕ Add New</button>
+                    </a>
+                    <button type="button" class="btn-toggle" onclick="toggleSection('{{ anchor_id }}')">▾</button>
+                </div>
+            </div>
 
-        {% if items|length == 0 %}
-            <p><i>No data found.</i></p>
-        {% else %}
-            <table>
-                <tr>
-                    {% for col in items[0].__table__.columns %}
-                        <th>{{ col.name }}</th>
-                    {% endfor %}
-                    <th>Actions</th>
-                </tr>
+            <div id="{{ anchor_id }}-body">
+                {% if items|length == 0 %}
+                    <p><i>No data found.</i></p>
+                {% else %}
+                    <table class="db-table" id="{{ anchor_id }}-table" data-model="{{ model_name }}">
+                        <thead>
+                            <tr>
+                                {% for col in items[0].__table__.columns %}
+                                    <th>{{ col.name }}</th>
+                                {% endfor %}
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
 
-                {% for row in items %}
-                <tr>
-                    {% for col in row.__table__.columns %}
-                        <td>{{ row|attr(col.name) }}</td>
-                    {% endfor %}
+                        <tbody>
+                            {% for row in items %}
+                            <tr>
+                                {% for col in row.__table__.columns %}
+                                    <td>{{ row|attr(col.name) }}</td>
+                                {% endfor %}
+                                <td class="actions">
+                                    <a href="{{ url_for('update_record', model=model_name, id=row|attr(id_attr)) }}">
+                                        <button type="button" class="btn-edit">✏️ Edit</button>
+                                    </a>
 
-                    <td class="actions">
-                        <!-- UPDATE BUTTON — goes to /edit/<model>/<id> -->
-                        <a href="{{ url_for('update_record',
-                                            model=model_name,
-                                            id=row|attr(id_attr)) }}">
-                            <button type="button" class="btn-edit">
-                                ✏️ Edit
-                            </button>
-                        </a>
-
-                        <!-- DELETE BUTTON — generic delete route -->
-                        <form method="post"
-                              action="{{ url_for('delete_record',
-                                                 model=model_name,
-                                                 id=row|attr(id_attr)) }}"
-                              onsubmit="return confirm('Are you sure you want to delete this record?');">
-                            <button type="submit" class="btn-delete">
-                                🗑️ Delete
-                            </button>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
-            </table>
-        {% endif %}
+                                    <form method="post"
+                                          action="{{ url_for('delete_record', model=model_name, id=row|attr(id_attr)) }}"
+                                          style="display:inline"
+                                          onsubmit="return confirm('Are you sure you want to delete this record?');">
+                                        <button type="submit" class="btn-delete">🗑️ Delete</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% endif %}
+            </div>
+        </div>
         {% endmacro %}
 
         {{ render_table("Users", data.users, "users", "user_id", "users") }}
@@ -236,5 +104,54 @@
         {{ render_table("Audit Logs", data.auditlogs, "auditlogs", "audit_id", "auditlogs") }}
     </div>
 </div>
+
+<!-- Simple client-side helpers: filter & collapse -->
+<script>
+/* smooth scroll for sidebar anchors */
+document.querySelectorAll('.db-sidebar a').forEach(a=>{
+    a.addEventListener('click', (e)=>{
+        e.preventDefault();
+        const id = a.getAttribute('href').replace('#','');
+        const el = document.getElementById(id);
+        if(el) {
+            window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 70, behavior: 'smooth' });
+        }
+    });
+});
+
+/* Toggle section collapse */
+function toggleSection(anchorId) {
+    const body = document.getElementById(anchorId + '-body');
+    if (!body) return;
+    body.classList.toggle('collapsed');
+    const btn = document.querySelector(`#${anchorId} .btn-toggle`);
+    if (btn) btn.textContent = body.classList.contains('collapsed') ? '▸' : '▾';
+}
+
+/* Filter rows inside a table by text (search in all columns) */
+function filterTable(anchorId, text) {
+    text = (text || '').trim().toLowerCase();
+    const tbody = document.querySelector('#' + anchorId + '-table tbody');
+    if(!tbody) return;
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    rows.forEach(tr => {
+        if(!text) {
+            tr.style.display = '';
+            return;
+        }
+        const rowText = tr.innerText.toLowerCase();
+        tr.style.display = rowText.indexOf(text) !== -1 ? '' : 'none';
+    });
+}
+
+/* Optional: initial collapse state for very large tables (uncomment to collapse by default)
+document.addEventListener('DOMContentLoaded', ()=>{
+    ['auditlogs','notifications','userfavorites'].forEach(id=>{
+        const body = document.getElementById(id + '-body');
+        if(body) body.classList.add('collapsed');
+    });
+});
+*/
+</script>
 
 {% endblock %}
