@@ -246,6 +246,20 @@ input:focus, select:focus, textarea:focus {
                 <label class="field-label" for="{{ form.plate_number.id }}">Plate number</label>
                 {{ form.plate_number(class="") }}
             </div>
+
+            <div class="field">
+                <label class="field-label" for="{{ form.capacity.id }}">Capacity</label>
+                {{ form.capacity(class="") }}
+            </div>
+
+             <div class="field">
+                <label class="field-label" for="{{ form.terminal_id.id }}">Assign to terminal</label>
+                {{ form.terminal_id(class="") }}
+            </div>
+
+            <div class="field-full">
+                <div class="note">This will create a new Jeepney record and attach it to this terminal’s queue as <strong>Waiting</strong>.</div>
+            </div>
             
 
 <form method="post">
