@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm # this for security and the secret key
-from wtforms import StringField, PasswordField, SubmitField, SelectField, IntegerField, DateTimeLocalField, BooleanField # for the function each of this have their own action
-from wtforms.validators import DataRequired, Length, Email, EqualTo, Optional # like role to make sure that data is valid
+from wtforms import StringField, PasswordField, SubmitField, SelectField, IntegerField, DateTimeLocalField, BooleanField# for the function each of this have their own action
+from wtforms.validators import DataRequired, Length, Email, EqualTo, Optional, NumberRange# like role to make sure that data is valid
 
 """
 - Datarequired() = make sure it have data
@@ -15,7 +15,10 @@ class nameof the form(FlaskForm) - always use the FlaskForm is very important
         Validators=[DataRequired()] - this are is for like to make sure it have data to past                        
       )
       submit = SubmitField("Register") = always part of the form
+      
+      
 """
+
 """"--------------SIGN IN -------------"""
 class RegisterForm(FlaskForm):
     first_name = StringField (
@@ -89,57 +92,52 @@ class AddTerminal(FlaskForm):
         validators=[DataRequired()]
     )
     submit = SubmitField("add terminal")
+    
 
 # -----------------UPDATE FIELD -----------------
 
 # ---------- USER ----------
-
 class UserForm(FlaskForm):
     first_name = StringField(
-        "First Name",
+        "First Name", 
         validators=[DataRequired()]
     )
     last_name = StringField(
         "Last Name",
         validators=[DataRequired()]
     )
-
     email = StringField(
-        "Email",
+        "Email", 
         validators=[DataRequired(), Email()]
     )
 
+    # Make password OPTIONAL (so edit pages can leave blank).
+    # But when provided, we require min length and matching confirm.
     password = PasswordField(
         "Password",
-        validators=[DataRequired(), Length(min=6, message="Password must be at least 6 characters")]
-    )  # to get the password
+        validators=[Optional(), Length(min=6, message="Password must be at least 6 characters")]
+    )
 
     confirm_password = PasswordField(
         "Confirm Password",
-        validators=[DataRequired(), EqualTo('password', message="Passwords must match")]
-    )  # to make sure the password is same
+        validators=[Optional(), EqualTo('password', message="Passwords must match")]
+    )
 
     role = SelectField(
         "Role",
-        choices=[
-            ("player", "player"),
-            ("operator", "operator"),
-            ("viewer", "viewer"),
-            ("admin", "admin"),
-        ],
+        choices=[("player", "player"), ("operator", "operator"), ("viewer", "viewer"), ("admin", "admin")],
         validators=[DataRequired()],
     )
 
     level = IntegerField(
-        "Level",
+        "Level", 
         validators=[DataRequired()]
     )
     xp_points = IntegerField(
-        "XP Points",
+        "XP Points", 
         validators=[DataRequired()]
     )
     submit = SubmitField("Save User")
-
 # ---------- TERMINAL ----------
 
 class TerminalForm(FlaskForm):
@@ -148,7 +146,7 @@ class TerminalForm(FlaskForm):
         validators=[DataRequired()]
     )
     location = StringField(
-        "Location",
+        "Location", 
         validators=[DataRequired()]
     )
 
@@ -159,27 +157,28 @@ class TerminalForm(FlaskForm):
     )
     is_main = BooleanField("Is Main Terminal")
     submit = SubmitField("Save Terminal")
+    
+    submit = SubmitField("Save Terminal")
 
 
 # ---------- ROUTE ----------
-
 class RouteForm(FlaskForm):
     route_name = StringField(
-        "Route Name",
+        "Route Name", 
         validators=[DataRequired()]
     )
     # These will be SelectFields filled with terminal choices in the route
     start_terminal_id = SelectField(
         "Start Terminal",
-        coerce=int,
+        coerce=int, 
         validators=[DataRequired()]
     )
     end_terminal_id = SelectField(
         "End Terminal",
-        coerce=int,
+        coerce=int, 
         validators=[DataRequired()]
     )
-
+    
     estimated_time_minutes = IntegerField(
         "Estimated Time (minutes)",
         validators=[DataRequired()]
@@ -187,16 +186,14 @@ class RouteForm(FlaskForm):
 
     submit = SubmitField("Save Route")
 
-
 # ---------- JEEPNEY ----------
-
 class JeepneyForm(FlaskForm):
     plate_number = StringField(
-        "Plate Number",
+        "Plate Number", 
         validators=[DataRequired()]
     )
     capacity = IntegerField(
-        "Capacity",
+        "Capacity", 
         validators=[DataRequired()]
     )
     terminal_id = SelectField(
@@ -214,7 +211,7 @@ class JeepneyForm(FlaskForm):
         ],
         default="Available",
         validators=[DataRequired()],
-
+        
     )
     submit = SubmitField("Save Jeepney")
 
@@ -223,22 +220,22 @@ class JeepneyForm(FlaskForm):
 
 class TripForm(FlaskForm):
     jeepney_id = SelectField(
-        "Jeepney",
-        coerce=int,
+        "Jeepney", 
+        coerce=int, 
         validators=[DataRequired()]
     )
     route_id = SelectField(
         "Route",
-        coerce=int,
+        coerce=int, 
         validators=[DataRequired()]
     )
     origin_terminal_id = SelectField(
-        "Origin Terminal",
-        coerce=int,
+        "Origin Terminal", 
+        coerce=int, 
         validators=[DataRequired()]
     )
     destination_terminal_id = SelectField(
-        "Destination Terminal",
+        "Destination Terminal", 
         coerce=int,
         validators=[DataRequired()]
     )
@@ -274,34 +271,35 @@ class TripForm(FlaskForm):
 
 class SeatForm(FlaskForm):
     trip_id = SelectField(
-        "Trip",
-        coerce=int,
+        "Trip", 
+        coerce=int, 
         validators=[DataRequired()]
     )
     total_seats = IntegerField(
-        "Total Seats",
+        "Total Seats", 
         validators=[DataRequired()]
     )
     available_seats = IntegerField(
-        "Available Seats",
+        "Available Seats", 
         validators=[DataRequired()]
     )
     occupied_seats = IntegerField(
-        "Occupied Seats",
+        "Occupied Seats", 
         validators=[DataRequired()]
     )
     submit = SubmitField("Save Seat")
+    
 
 # ---------- TERMINAL JEEPS ----------
 
 class TerminalJeepneysForm(FlaskForm):
     terminal_id = SelectField(
-        "Terminal",
-        coerce=int,
+        "Terminal", 
+        coerce=int, 
         validators=[DataRequired()]
     )
     jeepney_id = SelectField(
-        "Jeepney",
+        "Jeepney", 
         coerce=int,
         validators=[DataRequired()]
     )
@@ -329,46 +327,47 @@ class TerminalJeepneysForm(FlaskForm):
     )
 
     current_passengers = IntegerField(
-        "Current Passengers",
+        "Current Passengers", 
         validators=[DataRequired()]
     )
     submit = SubmitField("Save Terminal Jeep Entry")
+    
 
 # ---------- USER FAVORITE ----------
 
 class UserfavoriteForm(FlaskForm):
     user_id = SelectField(
-        "User",
-        coerce=int,
+        "User", 
+        coerce=int, 
         validators=[DataRequired()]
     )
     terminal_id = SelectField(
-        "Terminal",
-        coerce=int,
+        "Terminal", 
+        coerce=int, 
         validators=[DataRequired()]
     )
     route_id = SelectField(
-        "Route",
-        coerce=int,
+        "Route", 
+        coerce=int, 
         validators=[DataRequired()]
     )
     label = StringField(
-        "Label",
+        "Label", 
         validators=[DataRequired()]
     )
     submit = SubmitField("Save Favorite")
 
-# ---------- NOTIFICATION ----------
 
+# ---------- NOTIFICATION ----------
 class NotificationForm(FlaskForm):
     user_id = SelectField(
         "User",
-        coerce=int,
+        coerce=int, 
         validators=[DataRequired()]
     )
     trip_id = SelectField(
         "Trip",
-        coerce=int,
+        coerce=int, 
         validators=[DataRequired()]
     )
     type_nof = SelectField(
@@ -382,7 +381,7 @@ class NotificationForm(FlaskForm):
         validators=[DataRequired()],
     )
     message = StringField(
-        "Message",
+        "Message", 
         validators=[DataRequired()]
     )
     is_read = BooleanField("Is Read")
@@ -393,15 +392,15 @@ class NotificationForm(FlaskForm):
 class AuditlogForm(FlaskForm):
     user_id = SelectField(
         "User",
-        coerce=int,
+        coerce=int, 
         validators=[DataRequired()]
     )
     table_name = StringField(
-        "Table Name",
+        "Table Name", 
         validators=[DataRequired()]
     )
     record_id = IntegerField(
-        "Record ID",
+        "Record ID", 
         validators=[DataRequired()]
     )
 
@@ -416,7 +415,7 @@ class AuditlogForm(FlaskForm):
     )
 
     description = StringField(
-        "Description",
+        "Description", 
         validators=[Optional()]
     )
 
