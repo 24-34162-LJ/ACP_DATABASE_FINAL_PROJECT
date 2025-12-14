@@ -1,15 +1,104 @@
 {% extends "base.html" %}
 {% block title %} Commuter {% endblock %}
 {% block content %}
-<h1> commuter </h1>
-{% if session.get('user_id') %}
-<button type="button" class="btn btn-outline-primary"><a class="nav-link" href="{{ url_for('logout') }}">Logout</a></button>
 
-<button type="button" class="btn btn-outline-primary"><a href="{{ url_for('seat', terminal_id=2) }}">view terminal</a></button>
+<div class="container mt-4"></div>
 
-<button type="button" class="btn btn-outline-primary"><a href="{{ url_for('map_view') }}">view map</a></button>
+    <div class="text-center mb-4">
+        <h1 class="fw-bold text-primary">🚶‍♂️ Commuter Dashboard</h1>
+        <p class="text-muted">Quick access to all commuter tools and features</p>
+    </div>
 
-<button type="button" class="btn btn-outline-primary"><a href="{{ url_for('mainterminal') }}">main terminal</a></button>
+    {% if session.get('user_id') %}
 
-{% endif %}
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4"></div>
+
+        <!-- Logout -->
+        <div class="col">
+            <a href="{{ url_for('logout') }}" class="text-decoration-none">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">🔐 Logout</h5>
+                        <p class="card-text text-muted">Exit your session securely.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+         <!-- View Terminal -->
+        <div class="col">
+            <a href="{{ url_for('seat', terminal_id=2) }}" class="text-decoration-none">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">🏁 View Terminal</h5>
+                        <p class="card-text text-muted">Check seat availability & terminal info.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- View Map -->
+        <div class="col">
+            <a href="{{ url_for('map_view') }}" class="text-decoration-none">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">🗺️ View Map</h5>
+                        <p class="card-text text-muted">Explore jeepney routes visually.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Main Terminal -->
+        <div class="col">
+            <a href="{{ url_for('mainterminal') }}" class="text-decoration-none">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">🚏 Main Terminals</h5>
+                        <p class="card-text text-muted">Browse all major transport hubs.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Favorites -->
+        <div class="col">
+            <a href="{{ url_for('favorites_page') }}" class="text-decoration-none">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">⭐ Favorites</h5>
+                        <p class="card-text text-muted">View saved routes & terminals.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Notifications -->
+        <div class="col">
+            <a href="{{ url_for('notifications_page') }}" class="text-decoration-none">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">🔔 Notifications</h5>
+                        <p class="card-text text-muted">Stay updated on route changes.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Search -->
+        <div class="col">
+            <a href="{{ url_for('search') }}" class="text-decoration-none">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">🔍 Search</h5>
+                        <p class="card-text text-muted">Find terminals or jeepney routes.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+    </div>
+
+    {% endif %}
+
+</div>
 {% endblock %}
