@@ -132,8 +132,8 @@
 }
 </style>
 {% endblock %}
-{% block content %}
 
+{% block content %}
 <div class="admin-page">
   <div class="admin-wrap">
 
@@ -176,7 +176,7 @@
         </div>
       </div>
     </div>
-    
+
     <!-- optional preview area: show a few rows from Users (if available) -->
     {% if data is defined and data.users %}
     <div class="preview card" style="margin-top:18px;">
@@ -198,6 +198,7 @@
       </table>
     </div>
     {% endif %}
+
   </div>
-</div> 
+</div>
 {% endblock %}
