@@ -1,23 +1,61 @@
 {% extends "base.html" %}
-{% block title %} terminal {% endblock %}
+{% block title %}Add Terminal{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='terminal/terminal.css') }}">
+{% endblock %}
+
 {% block content %}
+<div class="terminal-container">
+  <div class="terminal-card">
+    <h2>➕ Add New Terminal</h2>
+    <p class="lead">Create a new terminal entry. Fill the details below and click <strong>Save</strong>.</p>
 
-<h1>add terminal</h1>
+    <form method="post" novalidate>
+      {{ form.hidden_tag() }}
 
-<form method="post">
-    {{ form.hidden_tag() }}
-    {{ form.terminal_name.label }}
-    {{ form.terminal_name() }}
+      <div class="form-row">
+        <label class="form-label" for="{{ form.terminal_name.id }}">Terminal name</label>
+        {{ form.terminal_name(class="") }}
+        {% if form.terminal_name.errors %}
+          <div class="help-text" style="color:#ef4444;">{{ form.terminal_name.errors[0] }}</div>
+        {% else %}
+          <div class="help-text">Example: "Lipa City Terminal" or "Main Terminal - Batangas".</div>
+        {% endif %}
+      </div>
 
-    <br>
+      <div class="form-row">
+        <label class="form-label" for="{{ form.location.id }}">Location</label>
+        {{ form.location(class="") }}
+        {% if form.location.errors %}
+          <div class="help-text" style="color:#ef4444;">{{ form.location.errors[0] }}</div>
+        {% else %}
+          <div class="help-text">Short address or description (barangay, city).</div>
+        {% endif %}
+      </div>
 
-    {{ form.location.label }}
-    {{ form.location() }}
+      <div class="form-row">
+        <label class="form-label" for="{{ form.route_name.id }}">Route name (optional)</label>
+        {{ form.route_name(class="") }}
+        <div class="help-text">If this terminal is tied to a route, add a friendly route name (e.g., "Lipa ↔ Batangas City").</div>
+      </div>
 
-    <br>
+      <div class="form-actions">
+        <a href="{{ url_for('map_view') }}" class="btn-secondary" style="text-decoration:none; color:inherit; display:inline-flex; align-items:center; gap:8px;">
+          ← Back to Map
+        </a>
 
-    {{ form.submit() }}
+        {{ form.submit(class="btn-primary") }}
+      </div>
+    </form>
+  </div>
+</div>
 
-</form>
-
+<script>
+// small nicety: focus the first input
+document.addEventListener('DOMContentLoaded', ()=> {
+  const el = document.getElementById("{{ form.terminal_name.id }}");
+  if(el) el.focus();
+});
+</script>
 {% endblock %}
