@@ -1,10 +1,19 @@
 {% extends "base.html" %}
 {% block title %} {{ action|capitalize }} {{ model|capitalize }} {% endblock %}
-{% block content %}
-
-<h2>{{ action|capitalize }} {{ model|capitalize }}</h2>
+{% block head %}
 
 <style>
+
+/* Container */
+.form-page {
+  display: flex;
+  justify-content: center;   /* center horizontally */
+  align-items: flex-start;    /* keep near top, not vertically centered */
+  padding: 24px 16px;         /* spacing around */
+  min-height: 0;             /* don't force tall height */
+  box-sizing: border-box;
+}
+    
     .btn-area {
         margin-top: 20px;
         display: flex;
