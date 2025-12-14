@@ -132,3 +132,72 @@
 }
 </style>
 {% endblock %}
+{% block content %}
+
+<div class="admin-page">
+  <div class="admin-wrap">
+
+    <div class="admin-header">
+      <div>
+        <h1>Admin</h1>
+        <p>Quick access to database viewer, audit logs, and account actions.</p>
+      </div>
+
+      <div class="actions">
+        <a class="btn btn-primary" href="{{ url_for('view') }}">📊 View Database</a>
+        <a class="btn btn-ghost" href="{{ url_for('auditlogs_page') }}">📝 Audit Logs</a>
+        <a class="btn btn-ghost" href="{{ url_for('logout') }}">🔒 Logout</a>
+      </div>
+    </div>
+
+    <div class="cards">
+      <div class="card">
+        <h3>Database Viewer</h3>
+        <p>Inspect and manage rows across all tables (users, terminals, jeepneys, trips, etc.).</p>
+        <div class="link-list">
+          <a href="{{ url_for('view') }}">Open Database Viewer →</a>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Audit Logs</h3>
+        <p>See recent inserts, updates, and deletes with user & timestamp details.</p>
+        <div class="link-list">
+          <a href="{{ url_for('auditlogs_page') }}">Open Audit Logs →</a>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>System</h3>
+        <p>Administrative actions like clearing caches or running maintenance tasks.</p>
+        <div class="link-list">
+          <!-- placeholder for future admin tasks -->
+          <a href="{{ url_for('logout') }}">Sign out</a>
+        </div>
+      </div>
+    </div>
+    
+    <!-- optional preview area: show a few rows from Users (if available) -->
+    {% if data is defined and data.users %}
+    <div class="preview card" style="margin-top:18px;">
+      <h3>Recent Users</h3>
+      <table>
+        <thead>
+          <tr><th>ID</th><th>Name</th><th>Email</th><th>Role</th></tr>
+        </thead>
+        <tbody>
+          {% for u in data.users[:6] %}
+            <tr>
+              <td>{{ u.user_id }}</td>
+              <td>{{ u.first_name }} {{ u.last_name }}</td>
+              <td>{{ u.email }}</td>
+              <td>{{ u.role }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+  </div>
+</div> 
+{% endblock %}
