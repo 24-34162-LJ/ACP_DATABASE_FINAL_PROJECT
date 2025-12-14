@@ -1,9 +1,8 @@
 {% extends "base.html" %}
 {% block title %} {{ action|capitalize }} {{ model|capitalize }} {% endblock %}
+
 {% block head %}
-
 <style>
-
 /* Container */
 .form-page {
   display: flex;
@@ -23,6 +22,7 @@
   box-shadow: 0 12px 36px rgba(10,20,30,0.06);
   border: 1px solid rgba(15,23,42,0.04);
 }
+
 /* When compact mode is active (for small forms) */
 .form-card.compact {
   max-width: 480px;
@@ -35,7 +35,6 @@
   font-size: 1.25rem;
   color: #0f172a;
 }
-
 .form-sub {
   margin: 0 0 14px 0;
   color: #6b7280;
@@ -139,8 +138,19 @@ input:focus, select:focus, textarea:focus {
   .form-card { padding: 16px; border-radius:10px; }
   .btn-area { flex-direction: column-reverse; gap:8px; align-items:stretch; }
 }
-
 </style>
+{% endblock %}
+
+{% block content %}
+<div class="form-page">
+  <div class="form-card" id="form-card">
+    <h2>{{ action|capitalize }} {{ model|capitalize }}</h2>
+    <p class="form-sub">Use this form to {{ action }} a <strong>{{ model }}</strong>. Fields marked optional can be left blank.</p>
+
+    <form method="post" novalidate>
+      {{ form.hidden_tag() }}
+
+      <div class="form-grid" id="form-grid">
 
         {# ===================== USERS ===================== #}
         {% if model == "users" %}
@@ -252,7 +262,7 @@ input:focus, select:focus, textarea:focus {
                 {{ form.capacity(class="") }}
             </div>
 
-             <div class="field">
+            <div class="field">
                 <label class="field-label" for="{{ form.terminal_id.id }}">Assign to terminal</label>
                 {{ form.terminal_id(class="") }}
             </div>
@@ -260,10 +270,9 @@ input:focus, select:focus, textarea:focus {
             <div class="field-full">
                 <div class="note">This will create a new Jeepney record and attach it to this terminal’s queue as <strong>Waiting</strong>.</div>
             </div>
+        {% endif %}
 
-    {% endif %}
-    
-    {# ===================== TRIPS ===================== #}
+        {# ===================== TRIPS ===================== #}
         {% if model == "trips" %}
             <div class="field">
                 <label class="field-label" for="{{ form.jeepney_id.id }}">Jeepney</label>
@@ -439,17 +448,13 @@ input:focus, select:focus, textarea:focus {
       </div> {# end form-grid #}
 
       <div class="btn-area">
-
-        <!-- SAVE BUTTON -->
         <button class="save-btn" type="submit">
-            💾 {{ action|capitalize }}
+          💾 {{ action|capitalize }}
         </button>
 
-        <!-- CANCEL BUTTON -->
         <a href="{{ url_for('view') }}" class="cancel-btn">
-            ✖ Cancel
+          ✖ Cancel
         </a>
-
       </div>
 
     </form>
@@ -465,6 +470,7 @@ input:focus, select:focus, textarea:focus {
     // small models that should use compact layout
     const smallModels = ["userfavorites", "notifications", "auditlogs"];
     const modelName = "{{ model|lower }}";
+
     const formGrid = document.getElementById('form-grid');
     const formCard = document.getElementById('form-card');
 
@@ -484,5 +490,4 @@ input:focus, select:focus, textarea:focus {
     }
   });
 </script>
-
 {% endblock %}
