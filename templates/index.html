@@ -1,4 +1,18 @@
 {% extends "base.html" %}
+{% block title %}Welcome — MAYJEEPBA?{% endblock %}
+
+{% block head %}
+<style>
+/* === COLORS & VARIABLES === */
+:root {
+  --primary: #0ea5a9;
+  --secondary: #06b6d4;
+  --dark: #062c30;
+  --muted: #6b7280;
+  --card-bg: #ffffff;
+  --radius: 16px;
+  --shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+}
 
 /* === HERO SECTION === */
 .hero {
@@ -112,7 +126,9 @@
 }
 </style>
 {% endblock %}
+
 {% block content %}
+
 <!-- ================= HERO SECTION ================= -->
 <section class="hero">
   <div class="hero-container">
@@ -133,13 +149,7 @@
     <!-- RIGHT: IMAGE -->
     <div class="hero-img-card">
       <img src="{{ url_for('static', filename='images/jeep.png') }}" alt="Jeepney" class="img-fluid">
-3 weeks ago
-
-initial
     </div>
-2 days ago
-
-phase 4.1
 
   </div>
 </section>
@@ -161,4 +171,5 @@ phase 4.1
     <p>Bookmark your preferred terminals and routes for fast access and updates.</p>
   </div>
 </section>
-{% endblock %}  
+
+{% endblock %}
