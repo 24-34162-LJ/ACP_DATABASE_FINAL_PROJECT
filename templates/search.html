@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Search Routes & Terminals</title>
+
+  <style>
+  /* ---------- Typography + Theme ---------- */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+
+  :root{
+    --bg:#f4f7fb;
+    --card:#ffffff;
+    --muted:#707b83;
+    --accent:#1e88e5;
+    --accent-600:#1667c6;
+    --soft-shadow: 0 8px 28px rgba(16,24,40,0.06);
+    --radius:12px;
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; margin:0; font-family:"Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
+
+  body{
+    background: linear-gradient(180deg, #f7fbfd 0%, var(--bg) 120px);
+    padding:32px;
+    color:#14202b;
+  }
+
+  /* ---------- Card container ---------- */
+  .card{
+    max-width:900px;
+    margin: 0 auto;
+    background: var(--card);
+    padding: 26px;
+    border-radius: calc(var(--radius) + 4px);
+    box-shadow: var(--soft-shadow);
+    border: 1px solid rgba(16,24,40,0.04);
+  }
+
+  h2{
+    margin:0 0 8px 0;
+    font-size:20px;
+    font-weight:700;
+    color:#0f1720;
+  }
+
+  .back{
+    display:inline-block;
+    margin-bottom:12px;
+    text-decoration:none;
+    color:var(--accent);
+    font-weight:600;
+    font-size:14px;
+  }
+  .back:hover{ color:var(--accent-600); text-decoration:underline; }
+
+  /* ---------- Inputs ---------- */
+  .input-group{ margin-bottom:18px; }
+  label{
+    display:block;
+    font-size:13px;
+    font-weight:600;
+    color:#24323a;
+    margin-bottom:8px;
+  }
+
+  input[type="text"]{
+    width:100%;
+    padding:12px 14px;
+    font-size:14px;
+    border-radius:10px;
+    border:1px solid rgba(16,24,40,0.08);
+    background: linear-gradient(180deg,#fff,#fbfdff);
+    box-shadow: 0 6px 18px rgba(16,24,40,0.02) inset;
+    outline:none;
+    transition: box-shadow .12s ease, border-color .12s ease, transform .06s ease;
+  }
+
+  input[type="text"]::placeholder{ color:#aab6bd; }
+  input[type="text"]:focus{
+    border-color: var(--accent-600);
+    box-shadow: 0 6px 18px rgba(30,136,229,0.08);
+    transform: translateY(-1px);
+  }
+
+  /* ---------- Result sections ---------- */
+  .result-section{ margin-top:28px; }
+  .result-section h3{ margin:0 0 8px 0; font-size:16px; color:#0b1b22; }
+
+  ul{
+    margin:0;
+    padding:10px;
+    background:#fbfdff;
+    border-radius:10px;
+    border:1px solid rgba(16,24,40,0.03);
+    list-style:none;
+    box-shadow: 0 8px 20px rgba(16,24,40,0.02) inset;
+  }
+
+  li{
+    padding:12px 14px;
+    border-radius:8px;
+    display:flex;
+    justify-content:space-between;
+    gap:12px;
+    align-items:flex-start;
+    transition: background .12s ease, transform .08s ease;
+  }
+
+  li + li{ margin-top:10px; }
+
+  li:hover{
+    background: linear-gradient(90deg,#ffffff,#f7fbff);
+    transform: translateY(-4px);
+    box-shadow: 0 10px 30px rgba(16,24,40,0.04);
+  }
+
+  li strong{ font-size:15px; color:#102329; display:block; }
+  .small{ font-size:13px; color:var(--muted); display:block; margin-top:6px; }
+
+  /* right-hand small metadata block */
+  .meta {
+    text-align:right;
+    min-width:120px;
+    font-size:13px;
+    color:var(--muted);
+  }
+
+  /* empty / placeholder items */
+  .placeholder {
+    color:var(--muted);
+    font-style:italic;
+    padding:14px;
+  }
+
+  /* ---------- Responsive tweaks ---------- */
+  @media (max-width:760px){
+    .card{ padding:18px; margin:8px; }
+    .meta{ display:block; text-align:left; margin-top:8px; }
+    li{ flex-direction:column; align-items:flex-start; }
+  }
+
+  /* ---------- subtle helpers ---------- */
+  .highlight {
+    background: linear-gradient(90deg,#f2fbff,#fffef6);
+    border-left:4px solid var(--accent);
+    padding-left:10px;
+  }
+</style>
+
+</head>
+<body>
+
+<div class="card">
+
+  <a class="back" href="{{ url_for('commuter') }}">← Back to Home</a>
+
+  <h2>Search Routes & Filter Terminals</h2>
+
+  <!-- ROUTE SEARCH -->
+  <div class="input-group">
+    <label>Search Route</label>
+    <input type="text" id="routeInput" placeholder="e.g. Lipa, Tanauan, Main → Lipa">
+  </div>
+
+  <!-- TERMINAL FILTER -->
+  <div class="input-group">
+    <label>Filter Terminals by Location</label>
+    <input type="text" id="terminalInput" placeholder="e.g. Batangas City, Lipa">
+  </div>
+
+  <!-- ROUTE RESULTS -->
+  <div class="result-section">
+    <h3>Route Results</h3>
+    <ul id="routeResults"><li class="small">Type to search routes…</li></ul>
+  </div>
+
+  <!-- TERMINAL RESULTS -->
+  <div class="result-section">
+    <h3>Terminal Results</h3>
+    <ul id="terminalResults"><li class="small">Type to filter terminals…</li></ul>
+  </div>
+
+</div>
+
+<script>
+  const routeInput = document.getElementById("routeInput");
+  const terminalInput = document.getElementById("terminalInput");
+
+  const routeResults = document.getElementById("routeResults");
+  const terminalResults = document.getElementById("terminalResults");
+
+  /* -------------------- ROUTE SEARCH -------------------- */
+  routeInput.addEventListener("input", () => {
+    const q = routeInput.value.trim();
+
+    if (!q) {
+      routeResults.innerHTML = '<li class="small">Type to search routes…</li>';
+      return;
+    }
+
+    fetch(`/api/search/routes?q=${encodeURIComponent(q)}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.length === 0) {
+          routeResults.innerHTML = '<li>No routes found.</li>';
+          return;
+        }
+
+        routeResults.innerHTML = "";
+        data.forEach(r => {
+          routeResults.innerHTML += `
+            <li>
+              <strong>${r.route_name}</strong><br>
+              <span class="small">From: ${r.start_terminal} → To: ${r.end_terminal}</span>
+            </li>
+          `;
+        });
+      });
+  });
+
+  /* -------------------- TERMINAL FILTER -------------------- */
+  terminalInput.addEventListener("input", () => {
+    const loc = terminalInput.value.trim();
+
+    if (!loc) {
+      terminalResults.innerHTML = '<li class="small">Type to filter terminals…</li>';
+      return;
+    }
+
+    fetch(`/api/terminals/filter?location=${encodeURIComponent(loc)}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.length === 0) {
+          terminalResults.innerHTML = '<li>No terminals found.</li>';
+          return;
+        }
+
+        terminalResults.innerHTML = "";
+        data.forEach(t => {
+          terminalResults.innerHTML += `
+            <li>
+              <strong>${t.terminal_name}</strong><br>
+              <span class="small">Location: ${t.location}</span><br>
+              <span class="small">ID: ${t.terminal_id}</span>
+            </li>
+          `;
+        });
+      });
+  });
+</script>
+
+</body>
+</html>
